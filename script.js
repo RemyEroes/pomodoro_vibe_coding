@@ -190,7 +190,27 @@ function loadSession() {
         }
     } else {
         resetTimer();
+
+        // Charger les tâches incomplètes par défaut
+        const incompleteTasks = loadIncompleteTasks();
+        if (incompleteTasks.length > 0) {
+            loadTasks(incompleteTasks);
+        }
     }
+}
+
+// Fonction pour charger les tâches incomplètes depuis le localStorage
+function loadIncompleteTasks() {
+    const incompleteTasks = JSON.parse(localStorage.getItem('incompleteTasks')) || [];
+    const tasks = [];
+
+    incompleteTasks.forEach(session => {
+        session.tasks.forEach(task => {
+            tasks.push({ name: task.name, validated: false });
+        });
+    });
+
+    return tasks;
 }
 
 // Helper pour activer/désactiver les contrôles de tâches
@@ -394,6 +414,7 @@ function resetTimer() {
     updateInputState();
 }
 
+// Modification de handleSessionComplete pour charger les tâches incomplètes après avoir complété une session
 function handleSessionComplete() {
     // Vérifier si le champ de nom de session est vide, sinon générer un nom par défaut
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
@@ -434,6 +455,12 @@ function handleSessionComplete() {
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
+
+    // Charger les tâches incomplètes immédiatement
+    const incompleteTasks = loadIncompleteTasks();
+    if (incompleteTasks.length > 0) {
+        loadTasks(incompleteTasks);
+    }
 }
 
 function notifyUser() {
