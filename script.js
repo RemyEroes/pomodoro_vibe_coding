@@ -2,11 +2,20 @@ let timer;
 let timeLeft = 25 * 60; // 25 minutes par défaut
 let isRunning = false;
 let isPaused = false;
+let isFinished = false;
 
 const timerInput = document.getElementById('timer-input');
 const startButton = document.getElementById('start');
 const pauseButton = document.getElementById('pause');
 const resetButton = document.getElementById('reset');
+
+// Ajouter un bouton "Complete" dans le DOM
+const completeButton = document.createElement('button');
+completeButton.id = 'complete';
+completeButton.textContent = 'Complete';
+completeButton.style.display = 'none';
+completeButton.classList.add('secondary');
+document.querySelector('.controls').appendChild(completeButton);
 
 // Fonction pour formater le temps en MM:SS
 function formatTime(totalSeconds) {
@@ -60,6 +69,7 @@ function updateButtonVisibility() {
         startButton.style.display = 'none';
         pauseButton.style.display = 'inline-block';
         resetButton.style.display = 'none';
+        completeButton.style.display = 'none';
         pauseButton.classList.add('primary');
         resetButton.classList.remove('secondary');
     } else {
@@ -67,12 +77,18 @@ function updateButtonVisibility() {
         if (timeLeft === 25 * 60) { // Temps par défaut
             startButton.style.display = 'inline-block';
             resetButton.style.display = 'none';
+            completeButton.style.display = 'none';
             startButton.textContent = 'Start'; // Revenir à "Start" si reset ou temps par défaut
             startButton.classList.add('primary');
             resetButton.classList.remove('secondary');
+        } else if (isFinished) {
+            startButton.style.display = 'none';
+            resetButton.style.display = 'none';
+            completeButton.style.display = 'inline-block';
         } else {
             startButton.style.display = 'inline-block';
             resetButton.style.display = 'inline-block';
+            completeButton.style.display = 'none';
             startButton.textContent = isPaused ? 'Resume' : 'Start'; // Afficher "Resume" si en pause
             startButton.classList.add('primary');
             resetButton.classList.add('secondary');
@@ -81,7 +97,7 @@ function updateButtonVisibility() {
 }
 
 function updateInputState() {
-    if (isRunning || isPaused) {
+    if (isRunning || isPaused || isFinished) {
         timerInput.setAttribute('disabled', 'true');
         timerInput.classList.add('no-hover');
     } else {
@@ -90,23 +106,115 @@ function updateInputState() {
     }
 }
 
+// Fonction pour générer un nom de session basé sur la date et l'heure actuelles
+function generateSessionName() {
+    const now = new Date();
+    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return now.toLocaleString('fr-FR', options).replace(',', ' |');
+}
+
+// Fonction pour sauvegarder l'état de la session dans le localStorage
+function saveSession() {
+    const session = {
+        name: generateSessionName(),
+        timeLeft,
+        isRunning,
+        isPaused
+    };
+    localStorage.setItem('pomodoroSession', JSON.stringify(session));
+}
+
+// Fonction pour sauvegarder une session complétée dans un tableau
+function saveCompletedSession(session) {
+    const completedSessions = JSON.parse(localStorage.getItem('completedSessions')) || [];
+    completedSessions.push(session);
+    localStorage.setItem('completedSessions', JSON.stringify(completedSessions));
+}
+
+// Fonction pour charger une session depuis le localStorage
+function loadSession() {
+    const sessionData = localStorage.getItem('pomodoroSession');
+    if (sessionData) {
+        const session = JSON.parse(sessionData);
+        if (session.isCompleted) {
+            resetTimer(); // Charger comme s'il n'y avait pas de session en cours
+            return;
+        }
+
+        timeLeft = session.timeLeft;
+        isRunning = session.isRunning;
+        isPaused = session.isPaused;
+        isFinished = timeLeft === 0; // Définir isFinished à true si le temps est écoulé
+
+        updateDisplay();
+        updateButtonVisibility();
+        updateInputState();
+
+        if (isRunning) {
+            // Reprendre le timer immédiatement si la session est en cours
+            timer = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                    saveSession();
+                } else {
+                    clearInterval(timer);
+                    isRunning = false;
+                    isPaused = false;
+                    isFinished = true;
+                    saveSession();
+                    handleSessionEnd();
+                }
+            }, 1000);
+        } else if (isFinished) {
+            handleSessionEnd(); // Gérer la fin de session si le temps est déjà écoulé
+        }
+    } else {
+        resetTimer();
+    }
+}
+
+function handleSessionEnd() {
+    // Mettre à jour le localStorage pour indiquer que la session est terminée
+    const session = {
+        name: generateSessionName(),
+        timeLeft: 0,
+        isRunning: false,
+        isPaused: false
+    };
+    localStorage.setItem('pomodoroSession', JSON.stringify(session));
+
+    // Cacher tous les boutons
+    startButton.style.display = 'none';
+    pauseButton.style.display = 'none';
+    resetButton.style.display = 'none';
+
+    // Afficher un message ou notifier l'utilisateur
+    notifyUser();
+}
+
 function startTimer() {
     if (!isRunning) {
         isRunning = true;
         isPaused = false;
+        isFinished = false;
+        saveSession(); // Sauvegarder l'état
         updateButtonVisibility();
         updateInputState();
         timer = setInterval(() => {
             if (timeLeft > 0) {
                 timeLeft--;
                 updateDisplay();
+                saveSession(); // Sauvegarder l'état à chaque seconde
             } else {
                 clearInterval(timer);
                 isRunning = false;
                 isPaused = false;
+                isFinished = true;
+                saveSession(); // Sauvegarder l'état final
                 updateButtonVisibility();
                 updateInputState();
-                notifyUser();
+                handleSessionEnd();
             }
         }, 1000);
     }
@@ -116,6 +224,8 @@ function pauseTimer() {
     clearInterval(timer);
     isRunning = false;
     isPaused = true;
+    isFinished = false;
+    saveSession(); // Sauvegarder l'état
     startButton.textContent = 'Resume'; // Mettre à jour le texte en "Resume" lors de la pause
     updateButtonVisibility();
     updateInputState();
@@ -125,13 +235,39 @@ function resetTimer() {
     clearInterval(timer);
     isRunning = false;
     isPaused = false;
+    isFinished = false;
     timeLeft = 25 * 60; // Remettre au temps par défaut
+    localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
 }
 
+function handleSessionComplete() {
+    // Marquer la session comme complétée dans le localStorage
+    const session = {
+        name: generateSessionName(),
+        timeLeft: 0,
+        isRunning: false,
+        isPaused: false,
+        isFinished: false,
+        isCompleted: true
+    };
+    saveCompletedSession(session); // Ajouter la session au tableau des sessions complétées
+
+    // Supprimer la session en cours du localStorage
+    localStorage.removeItem('pomodoroSession');
+
+    // Réinitialiser l'affichage comme s'il n'y avait pas de session en cours
+    timeLeft = 25 * 60;
+    isRunning = false;
+    isPaused = false;
+    isFinished = false;
+    updateDisplay();
+    updateButtonVisibility();
+    updateInputState();
+}
 
 function notifyUser() {
     if (Notification.permission === 'granted') {
@@ -208,3 +344,9 @@ timerInput.addEventListener('keydown', (event) => {
 updateDisplay();
 updateButtonVisibility();
 updateInputState();
+
+// Charger la session au rechargement de la page
+window.addEventListener('load', loadSession);
+
+// Ajouter un gestionnaire d'événement pour le bouton "Complete"
+completeButton.addEventListener('click', handleSessionComplete);
