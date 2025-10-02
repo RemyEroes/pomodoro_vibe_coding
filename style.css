@@ -6,6 +6,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     height: 100vh;
 }
 
@@ -178,6 +179,10 @@ h1 {
     color: #aaa;
     border-color: #ddd;
     cursor: not-allowed;
+}
+.task-input.validated {
+    background-color: #8bf13c;
+    color: #ffffff;
 }
 
 .delete-task {
