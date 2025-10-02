@@ -28,6 +28,30 @@ h1 {
     font-size: 48px;
     margin: 20px 0;
     color: #e74c3c;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 10px 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    transition: all 0.3s ease;
+    cursor: text;
+}
+
+.timer-display:hover {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.timer-display:focus {
+    outline: none;
+    border-color: #c0392b;
+    background: rgba(231, 76, 60, 0.1);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
 }
 
 .controls button {
