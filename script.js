@@ -311,6 +311,16 @@ function resetTimer() {
     localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
     sessionNameInput.value = ''; // Effacer le nom de la session
+
+    // Supprimer les tâches de l'UI et réactiver les contrôles
+    if (typeof tasksList !== 'undefined' && tasksList) {
+        tasksList.innerHTML = '';
+    }
+    // Réactiver le bouton d'ajout et les boutons supprimer
+    if (typeof setTasksDisabled === 'function') {
+        setTasksDisabled(false);
+    }
+
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
