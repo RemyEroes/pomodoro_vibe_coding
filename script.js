@@ -1,6 +1,7 @@
 let timer;
 let timeLeft = 25 * 60; // 25 minutes par défaut
 let isRunning = false;
+let isPaused = false;
 
 const timerInput = document.getElementById('timer-input');
 const startButton = document.getElementById('start');
@@ -72,17 +73,29 @@ function updateButtonVisibility() {
         } else {
             startButton.style.display = 'inline-block';
             resetButton.style.display = 'inline-block';
-            startButton.textContent = 'Resume'; // Afficher "Resume" si le temps est en pause
+            startButton.textContent = isPaused ? 'Resume' : 'Start'; // Afficher "Resume" si en pause
             startButton.classList.add('primary');
             resetButton.classList.add('secondary');
         }
     }
 }
 
+function updateInputState() {
+    if (isRunning || isPaused) {
+        timerInput.setAttribute('disabled', 'true');
+        timerInput.classList.add('no-hover');
+    } else {
+        timerInput.removeAttribute('disabled');
+        timerInput.classList.remove('no-hover');
+    }
+}
+
 function startTimer() {
     if (!isRunning) {
         isRunning = true;
+        isPaused = false;
         updateButtonVisibility();
+        updateInputState();
         timer = setInterval(() => {
             if (timeLeft > 0) {
                 timeLeft--;
@@ -90,7 +103,9 @@ function startTimer() {
             } else {
                 clearInterval(timer);
                 isRunning = false;
+                isPaused = false;
                 updateButtonVisibility();
+                updateInputState();
                 notifyUser();
             }
         }, 1000);
@@ -100,17 +115,21 @@ function startTimer() {
 function pauseTimer() {
     clearInterval(timer);
     isRunning = false;
+    isPaused = true;
     startButton.textContent = 'Resume'; // Mettre à jour le texte en "Resume" lors de la pause
     updateButtonVisibility();
+    updateInputState();
 }
 
 function resetTimer() {
     clearInterval(timer);
     isRunning = false;
+    isPaused = false;
     timeLeft = 25 * 60; // Remettre au temps par défaut
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
     updateDisplay();
     updateButtonVisibility();
+    updateInputState();
 }
 
 
@@ -188,3 +207,4 @@ timerInput.addEventListener('keydown', (event) => {
 // Initialiser l'affichage et les boutons
 updateDisplay();
 updateButtonVisibility();
+updateInputState();
