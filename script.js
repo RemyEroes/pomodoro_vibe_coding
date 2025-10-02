@@ -53,9 +53,36 @@ function updateDisplay() {
     }
 }
 
+// Fonction pour mettre à jour la visibilité et les styles des boutons
+function updateButtonVisibility() {
+    if (isRunning) {
+        startButton.style.display = 'none';
+        pauseButton.style.display = 'inline-block';
+        resetButton.style.display = 'none';
+        pauseButton.classList.add('primary');
+        resetButton.classList.remove('secondary');
+    } else {
+        pauseButton.style.display = 'none';
+        if (timeLeft === 25 * 60) { // Temps par défaut
+            startButton.style.display = 'inline-block';
+            resetButton.style.display = 'none';
+            startButton.textContent = 'Start'; // Revenir à "Start" si reset ou temps par défaut
+            startButton.classList.add('primary');
+            resetButton.classList.remove('secondary');
+        } else {
+            startButton.style.display = 'inline-block';
+            resetButton.style.display = 'inline-block';
+            startButton.textContent = 'Resume'; // Afficher "Resume" si le temps est en pause
+            startButton.classList.add('primary');
+            resetButton.classList.add('secondary');
+        }
+    }
+}
+
 function startTimer() {
     if (!isRunning) {
         isRunning = true;
+        updateButtonVisibility();
         timer = setInterval(() => {
             if (timeLeft > 0) {
                 timeLeft--;
@@ -63,6 +90,7 @@ function startTimer() {
             } else {
                 clearInterval(timer);
                 isRunning = false;
+                updateButtonVisibility();
                 notifyUser();
             }
         }, 1000);
@@ -72,13 +100,17 @@ function startTimer() {
 function pauseTimer() {
     clearInterval(timer);
     isRunning = false;
+    startButton.textContent = 'Resume'; // Mettre à jour le texte en "Resume" lors de la pause
+    updateButtonVisibility();
 }
 
 function resetTimer() {
     clearInterval(timer);
     isRunning = false;
-    timeLeft = parseTimeFromInput();
+    timeLeft = 25 * 60; // Remettre au temps par défaut
+    startButton.textContent = 'Start'; // Revenir à "Start" après un reset
     updateDisplay();
+    updateButtonVisibility();
 }
 
 
@@ -103,7 +135,7 @@ startButton.addEventListener('click', () => {
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission();
     }
-    
+
     // Si le timer n'est pas en cours, mettre à jour avec la valeur saisie
     if (!isRunning) {
         timeLeft = parseTimeFromInput();
@@ -115,7 +147,14 @@ pauseButton.addEventListener('click', pauseTimer);
 resetButton.addEventListener('click', resetTimer);
 
 // Gestion de la saisie dans l'input
-timerInput.addEventListener('input', formatInput);
+timerInput.addEventListener('input', (event) => {
+    formatInput(event);
+    if (!isRunning) {
+        timeLeft = parseTimeFromInput();
+        updateDisplay();
+        updateButtonVisibility();
+    }
+});
 
 // Mettre à jour le timer quand on quitte l'input (blur)
 timerInput.addEventListener('blur', () => {
@@ -146,5 +185,6 @@ timerInput.addEventListener('keydown', (event) => {
     }
 });
 
-// Initialiser l'affichage
+// Initialiser l'affichage et les boutons
 updateDisplay();
+updateButtonVisibility();

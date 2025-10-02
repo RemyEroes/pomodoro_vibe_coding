@@ -68,3 +68,33 @@ h1 {
 .controls button:hover {
     background: #c0392b;
 }
+
+.controls button.primary {
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.controls button.primary:hover {
+    background: #2980b9;
+}
+
+.controls button.secondary {
+    background: #bdc3c7;
+    color: #2c3e50;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.controls button.secondary:hover {
+    background: #95a5a6;
+}
