@@ -130,7 +130,9 @@ function saveSession() {
         name: sessionName,
         timeLeft,
         isRunning,
-        isPaused
+        isPaused,
+        isFinished,
+        tasks: saveTasks(),
     };
     localStorage.setItem('pomodoroSession', JSON.stringify(session));
 }
@@ -159,6 +161,10 @@ function loadSession() {
 
         sessionNameInput.value = session.name || ''; // Charger le nom de la session
 
+        if (session.tasks) {
+            loadTasks(session.tasks); // Charger les tâches
+        }
+
         updateDisplay();
         updateButtonVisibility();
         updateInputState();
@@ -184,23 +190,162 @@ function loadSession() {
         }
     } else {
         resetTimer();
+
+        // Charger les tâches incomplètes par défaut
+        const incompleteTasks = loadIncompleteTasks();
+        if (incompleteTasks.length > 0) {
+            loadTasks(incompleteTasks);
+        }
     }
 }
 
+// Fonction pour charger les tâches incomplètes depuis le localStorage
+function loadIncompleteTasks() {
+    const incompleteTasks = JSON.parse(localStorage.getItem('incompleteTasks')) || [];
+    const tasks = [];
+
+    incompleteTasks.forEach(session => {
+        session.tasks.forEach(task => {
+            tasks.push({ name: task.name, validated: false });
+        });
+    });
+
+    return tasks;
+}
+
+// Helper pour activer/désactiver les contrôles de tâches
+function setTasksDisabled(disabled) {
+    const taskInputs = document.querySelectorAll('.task-input');
+    const deleteButtons = document.querySelectorAll('.delete-task');
+    const addTaskBtn = document.getElementById('add-task');
+
+    taskInputs.forEach(input => {
+        if (disabled) input.setAttribute('disabled', 'true');
+        else input.removeAttribute('disabled');
+    });
+
+    deleteButtons.forEach(btn => {
+        if (disabled) btn.classList.add('disabled');
+        else btn.classList.remove('disabled');
+    });
+
+    if (disabled) addTaskBtn.classList.add('disabled');
+    else addTaskBtn.classList.remove('disabled');
+}
+
+// Correction de la fonction saveTasks pour s'assurer que les données sont bien sauvegardées
+function saveTasks() {
+    const tasks = [];
+    const taskInputs = document.querySelectorAll('.task-input');
+    taskInputs.forEach(input => {
+        tasks.push({ 
+            name: input.value.trim(), // Supprimer les espaces inutiles
+            validated: input.dataset && input.dataset.validated === 'true' // Vérifier la présence de l'attribut
+        });
+    });
+    return tasks;
+}
+
+// Correction de la fonction loadTasks pour s'assurer que les données sont bien restaurées
+function loadTasks(tasks) {
+    tasksList.innerHTML = ''; // Réinitialiser la liste des tâches
+    tasks.forEach(task => {
+        const taskItem = document.createElement('li');
+
+        const taskInput = document.createElement('input');
+        taskInput.type = 'text';
+        taskInput.value = task.name;
+        taskInput.classList.add('task-input');
+        
+        // Restaurer l'état validated si présent
+        if (task.validated) {
+            taskInput.dataset.validated = 'true';
+            taskInput.classList.add('validated');
+        } else {
+            taskInput.dataset.validated = 'false';
+        }
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Supprimer';
+        deleteButton.classList.add('delete-task');
+
+        deleteButton.addEventListener('click', () => {
+            tasksList.removeChild(taskItem);
+            saveSession();
+        });
+
+        taskItem.appendChild(taskInput);
+        taskItem.appendChild(deleteButton);
+        tasksList.appendChild(taskItem);
+    });
+
+    // Si la session est en cours, en pause ou finie, désactiver les tâches
+    if (isRunning || isPaused || isFinished) {
+        setTasksDisabled(true);
+    } else {
+        setTasksDisabled(false);
+    }
+}
+
+// rendre les tâches cliquables après la fin du timer pour marquer validated
+function makeTasksValidatable() {
+    const taskInputs = document.querySelectorAll('.task-input');
+    const deleteButtons = document.querySelectorAll('.delete-task');
+    const addTaskBtn = document.getElementById('add-task');
+
+    // masquer ajout et suppression pendant validation
+    if (addTaskBtn) addTaskBtn.classList.add('disabled');
+    deleteButtons.forEach(btn => btn.classList.add('disabled'));
+
+    taskInputs.forEach(input => {
+        // s'assurer activé pour pouvoir cliquer
+        input.removeAttribute('disabled');
+        input.classList.add('clickable');
+        input.style.cursor = 'pointer';
+
+        // éviter d'attacher plusieurs fois
+        if (input.__validListenerAttached) return;
+
+        input.addEventListener('click', function () {
+            if (this.dataset.validated !== 'true') {
+                this.dataset.validated = 'true';
+                this.classList.add('validated');
+
+                // Ajouter le bouton "X" pour retirer la validation
+                const removeValidationButton = document.createElement('button');
+                removeValidationButton.textContent = 'X';
+                removeValidationButton.classList.add('remove-validation');
+                removeValidationButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Empêcher le clic de valider à nouveau
+                    this.dataset.validated = 'false';
+                    this.classList.remove('validated');
+                    removeValidationButton.remove();
+                    saveSession();
+                });
+                this.parentElement.appendChild(removeValidationButton);
+
+                saveSession();
+            }
+        });
+
+        input.__validListenerAttached = true;
+    });
+}
+
 function handleSessionEnd() {
-    // Mettre à jour le localStorage pour indiquer que la session est terminée
-    const session = {
-        name: generateSessionName(),
-        timeLeft: 0,
-        isRunning: false,
-        isPaused: false
-    };
-    localStorage.setItem('pomodoroSession', JSON.stringify(session));
+    // Marquer la session comme finie et sauvegarder l'état (incluant tasks)
+    isFinished = true;
+    isRunning = false;
+    isPaused = false;
+    saveSession();
 
     // Cacher tous les boutons
     startButton.style.display = 'none';
     pauseButton.style.display = 'none';
     resetButton.style.display = 'none';
+
+    // Rendre les tâches cliquables pour validation
+    makeTasksValidatable();
 
     // Afficher un message ou notifier l'utilisateur
     notifyUser();
@@ -208,6 +353,9 @@ function handleSessionEnd() {
 
 function startTimer() {
     if (!isRunning) {
+        // Supprimer les tâches incomplètes du localStorage
+        localStorage.removeItem('incompleteTasks');
+
         isRunning = true;
         isPaused = false;
         isFinished = false;
@@ -244,6 +392,7 @@ function pauseTimer() {
     updateInputState();
 }
 
+
 function resetTimer() {
     clearInterval(timer);
     isRunning = false;
@@ -253,38 +402,68 @@ function resetTimer() {
     localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
     sessionNameInput.value = ''; // Effacer le nom de la session
+
+    // Supprimer les tâches de l'UI et réactiver les contrôles
+    if (typeof tasksList !== 'undefined' && tasksList) {
+        tasksList.innerHTML = '';
+    }
+    // Réactiver le bouton d'ajout et les boutons supprimer
+    if (typeof setTasksDisabled === 'function') {
+        setTasksDisabled(false);
+    }
+
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
 }
 
+// Modification de handleSessionComplete pour charger les tâches incomplètes après avoir complété une session
 function handleSessionComplete() {
     // Vérifier si le champ de nom de session est vide, sinon générer un nom par défaut
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
 
-    // Marquer la session comme complétée dans le localStorage
-    const session = {
+    // Récupérer les tâches (avec validated)
+    const allTasks = saveTasks();
+    const validatedTasks = allTasks.filter(t => t.validated);
+    const notValidated = allTasks.filter(t => !t.validated);
+
+    // Créer la session complétée avec les tâches validées
+    const completedSession = {
         name: sessionName,
         timeLeft: 0,
         isRunning: false,
         isPaused: false,
         isFinished: false,
-        isCompleted: true
+        isCompleted: true,
+        tasks: validatedTasks
     };
-    saveCompletedSession(session); // Ajouter la session au tableau des sessions complétées
+    saveCompletedSession(completedSession);
 
-    // Supprimer la session en cours du localStorage
+    // Sauvegarder les tâches non validées séparément
+    if (notValidated.length) {
+        const existing = JSON.parse(localStorage.getItem('incompleteTasks')) || [];
+        existing.push({ sessionName, date: new Date().toISOString(), tasks: notValidated });
+        localStorage.setItem('incompleteTasks', JSON.stringify(existing));
+    }
+
+    // Nettoyage localStorage et UI
     localStorage.removeItem('pomodoroSession');
-
-    // Réinitialiser l'affichage comme s'il n'y avait pas de session en cours
     timeLeft = 25 * 60;
     isRunning = false;
     isPaused = false;
     isFinished = false;
-    sessionNameInput.value = ''; // Effacer le nom de la session
+    sessionNameInput.value = '';
+    if (typeof tasksList !== 'undefined' && tasksList) tasksList.innerHTML = '';
+    if (typeof setTasksDisabled === 'function') setTasksDisabled(false);
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
+
+    // Charger les tâches incomplètes immédiatement
+    const incompleteTasks = loadIncompleteTasks();
+    if (incompleteTasks.length > 0) {
+        loadTasks(incompleteTasks);
+    }
 }
 
 function notifyUser() {
@@ -373,3 +552,50 @@ window.addEventListener('load', loadSession);
 
 // Ajouter un gestionnaire d'événement pour le bouton "Complete"
 completeButton.addEventListener('click', handleSessionComplete);
+
+// Ajouter un gestionnaire d'événement pour le bouton "Ajouter une tâche"
+const addTaskButton = document.getElementById('add-task');
+const tasksList = document.getElementById('tasks-list');
+
+addTaskButton.addEventListener('click', () => {
+    const taskItem = document.createElement('li');
+
+    const taskInput = document.createElement('input');
+    taskInput.type = 'text';
+    taskInput.placeholder = 'Nom de la tâche';
+    taskInput.classList.add('task-input');
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Supprimer';
+    deleteButton.classList.add('delete-task');
+
+    deleteButton.addEventListener('click', () => {
+        tasksList.removeChild(taskItem);
+    });
+
+    taskItem.appendChild(taskInput);
+    taskItem.appendChild(deleteButton);
+    tasksList.appendChild(taskItem);
+});
+
+// Désactiver les champs de tâches au démarrage
+function disableTasks() {
+    const taskInputs = document.querySelectorAll('.task-input');
+    taskInputs.forEach(input => input.setAttribute('disabled', 'true'));
+
+    const addTaskButton = document.getElementById('add-task');
+    addTaskButton.classList.add('disabled'); // Ajouter une classe "disabled" au bouton "Ajouter une tâche"
+
+    // Ajouter une classe "disabled" aux boutons "Supprimer"
+    const deleteButtons = document.querySelectorAll('.delete-task');
+    deleteButtons.forEach(button => button.classList.add('disabled'));
+}
+
+// Modifier le bouton "Start" pour désactiver les tâches
+startButton.addEventListener('click', () => {
+    disableTasks();
+    const tasks = saveTasks();
+    const session = JSON.parse(localStorage.getItem('pomodoroSession')) || {};
+    session.tasks = tasks;
+    localStorage.setItem('pomodoroSession', JSON.stringify(session));
+});
