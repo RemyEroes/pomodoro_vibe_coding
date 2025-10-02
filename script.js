@@ -288,11 +288,26 @@ function makeTasksValidatable() {
 
         input.addEventListener('click', function () {
             if (this.dataset.validated !== 'true') {
-            this.dataset.validated = 'true';
-            this.classList.add('validated');
-            saveSession();
+                this.dataset.validated = 'true';
+                this.classList.add('validated');
+
+                // Ajouter le bouton "X" pour retirer la validation
+                const removeValidationButton = document.createElement('button');
+                removeValidationButton.textContent = 'X';
+                removeValidationButton.classList.add('remove-validation');
+                removeValidationButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Empêcher le clic de valider à nouveau
+                    this.dataset.validated = 'false';
+                    this.classList.remove('validated');
+                    removeValidationButton.remove();
+                    saveSession();
+                });
+                this.parentElement.appendChild(removeValidationButton);
+
+                saveSession();
             }
         });
+
         input.__validListenerAttached = true;
     });
 }
