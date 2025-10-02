@@ -192,7 +192,27 @@ function loadSession() {
     }
 }
 
-// Charger les tâches depuis le localStorage
+// Helper pour activer/désactiver les contrôles de tâches
+function setTasksDisabled(disabled) {
+    const taskInputs = document.querySelectorAll('.task-input');
+    const deleteButtons = document.querySelectorAll('.delete-task');
+    const addTaskBtn = document.getElementById('add-task');
+
+    taskInputs.forEach(input => {
+        if (disabled) input.setAttribute('disabled', 'true');
+        else input.removeAttribute('disabled');
+    });
+
+    deleteButtons.forEach(btn => {
+        if (disabled) btn.classList.add('disabled');
+        else btn.classList.remove('disabled');
+    });
+
+    if (disabled) addTaskBtn.classList.add('disabled');
+    else addTaskBtn.classList.remove('disabled');
+}
+
+// Mettre à jour loadTasks pour appliquer l'état disabled selon la session
 function loadTasks(tasks) {
     tasksList.innerHTML = ''; // Réinitialiser la liste des tâches
     tasks.forEach(task => {
@@ -215,6 +235,13 @@ function loadTasks(tasks) {
         taskItem.appendChild(deleteButton);
         tasksList.appendChild(taskItem);
     });
+
+    // Si la session est en cours, en pause ou finie, désactiver les tâches
+    if (isRunning || isPaused || isFinished) {
+        setTasksDisabled(true);
+    } else {
+        setTasksDisabled(false);
+    }
 }
 
 function handleSessionEnd() {
