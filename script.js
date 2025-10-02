@@ -90,20 +90,77 @@ function updateInputState() {
     }
 }
 
+// Fonction pour générer un nom de session basé sur la date et l'heure actuelles
+function generateSessionName() {
+    const now = new Date();
+    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return now.toLocaleString('fr-FR', options).replace(',', ' |');
+}
+
+// Fonction pour sauvegarder l'état de la session dans le localStorage
+function saveSession() {
+    const session = {
+        name: generateSessionName(),
+        timeLeft,
+        isRunning,
+        isPaused
+    };
+    localStorage.setItem('pomodoroSession', JSON.stringify(session));
+}
+
+// Fonction pour charger une session depuis le localStorage
+function loadSession() {
+    const sessionData = localStorage.getItem('pomodoroSession');
+    if (sessionData) {
+        const session = JSON.parse(sessionData);
+        timeLeft = session.timeLeft;
+        isRunning = session.isRunning;
+        isPaused = session.isPaused;
+
+        updateDisplay();
+        updateButtonVisibility();
+        updateInputState();
+
+        if (isRunning) {
+            // Reprendre le timer immédiatement si la session est en cours
+            timer = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                    saveSession();
+                } else {
+                    clearInterval(timer);
+                    isRunning = false;
+                    isPaused = false;
+                    saveSession();
+                    updateButtonVisibility();
+                    updateInputState();
+                    notifyUser();
+                }
+            }, 1000);
+        }
+    } else {
+        resetTimer();
+    }
+}
+
 function startTimer() {
     if (!isRunning) {
         isRunning = true;
         isPaused = false;
+        saveSession(); // Sauvegarder l'état
         updateButtonVisibility();
         updateInputState();
         timer = setInterval(() => {
             if (timeLeft > 0) {
                 timeLeft--;
                 updateDisplay();
+                saveSession(); // Sauvegarder l'état à chaque seconde
             } else {
                 clearInterval(timer);
                 isRunning = false;
                 isPaused = false;
+                saveSession(); // Sauvegarder l'état final
                 updateButtonVisibility();
                 updateInputState();
                 notifyUser();
@@ -116,6 +173,7 @@ function pauseTimer() {
     clearInterval(timer);
     isRunning = false;
     isPaused = true;
+    saveSession(); // Sauvegarder l'état
     startButton.textContent = 'Resume'; // Mettre à jour le texte en "Resume" lors de la pause
     updateButtonVisibility();
     updateInputState();
@@ -126,6 +184,7 @@ function resetTimer() {
     isRunning = false;
     isPaused = false;
     timeLeft = 25 * 60; // Remettre au temps par défaut
+    localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
     updateDisplay();
     updateButtonVisibility();
@@ -208,3 +267,6 @@ timerInput.addEventListener('keydown', (event) => {
 updateDisplay();
 updateButtonVisibility();
 updateInputState();
+
+// Charger la session au rechargement de la page
+window.addEventListener('load', loadSession);
