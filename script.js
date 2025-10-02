@@ -353,6 +353,9 @@ function handleSessionEnd() {
 
 function startTimer() {
     if (!isRunning) {
+        // Supprimer les tâches incomplètes du localStorage
+        localStorage.removeItem('incompleteTasks');
+
         isRunning = true;
         isPaused = false;
         isFinished = false;
