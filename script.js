@@ -256,6 +256,9 @@ function handleSessionComplete() {
     };
     saveCompletedSession(session); // Ajouter la session au tableau des sessions complétées
 
+    // Supprimer la session en cours du localStorage
+    localStorage.removeItem('pomodoroSession');
+
     // Réinitialiser l'affichage comme s'il n'y avait pas de session en cours
     timeLeft = 25 * 60;
     isRunning = false;
