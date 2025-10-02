@@ -17,6 +17,14 @@ completeButton.style.display = 'none';
 completeButton.classList.add('secondary');
 document.querySelector('.controls').appendChild(completeButton);
 
+// Ajouter un champ d'entrée pour le nom de la session dans le DOM
+const sessionNameInput = document.createElement('input');
+sessionNameInput.id = 'session-name';
+sessionNameInput.type = 'text';
+sessionNameInput.placeholder = 'Nom de la session';
+sessionNameInput.classList.add('session-name-input');
+document.querySelector('.pomodoro-container').insertBefore(sessionNameInput, document.querySelector('.timer-display'));
+
 // Fonction pour formater le temps en MM:SS
 function formatTime(totalSeconds) {
     const minutes = Math.floor(totalSeconds / 60);
@@ -100,9 +108,11 @@ function updateInputState() {
     if (isRunning || isPaused || isFinished) {
         timerInput.setAttribute('disabled', 'true');
         timerInput.classList.add('no-hover');
+        sessionNameInput.setAttribute('disabled', 'true');
     } else {
         timerInput.removeAttribute('disabled');
         timerInput.classList.remove('no-hover');
+        sessionNameInput.removeAttribute('disabled');
     }
 }
 
@@ -115,8 +125,9 @@ function generateSessionName() {
 
 // Fonction pour sauvegarder l'état de la session dans le localStorage
 function saveSession() {
+    const sessionName = sessionNameInput.value.trim() || generateSessionName();
     const session = {
-        name: generateSessionName(),
+        name: sessionName,
         timeLeft,
         isRunning,
         isPaused
@@ -145,6 +156,8 @@ function loadSession() {
         isRunning = session.isRunning;
         isPaused = session.isPaused;
         isFinished = timeLeft === 0; // Définir isFinished à true si le temps est écoulé
+
+        sessionNameInput.value = session.name || ''; // Charger le nom de la session
 
         updateDisplay();
         updateButtonVisibility();
@@ -239,15 +252,19 @@ function resetTimer() {
     timeLeft = 25 * 60; // Remettre au temps par défaut
     localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
+    sessionNameInput.value = ''; // Effacer le nom de la session
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
 }
 
 function handleSessionComplete() {
+    // Vérifier si le champ de nom de session est vide, sinon générer un nom par défaut
+    const sessionName = sessionNameInput.value.trim() || generateSessionName();
+
     // Marquer la session comme complétée dans le localStorage
     const session = {
-        name: generateSessionName(),
+        name: sessionName,
         timeLeft: 0,
         isRunning: false,
         isPaused: false,
@@ -264,6 +281,7 @@ function handleSessionComplete() {
     isRunning = false;
     isPaused = false;
     isFinished = false;
+    sessionNameInput.value = ''; // Effacer le nom de la session
     updateDisplay();
     updateButtonVisibility();
     updateInputState();
@@ -289,6 +307,11 @@ function notifyUser() {
 startButton.addEventListener('click', () => {
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission();
+    }
+
+    // Si le champ de nom de session est vide, y mettre le nom par défaut
+    if (!sessionNameInput.value.trim()) {
+        sessionNameInput.value = generateSessionName();
     }
 
     // Si le timer n'est pas en cours, mettre à jour avec la valeur saisie
