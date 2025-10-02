@@ -2,6 +2,7 @@ let timer;
 let timeLeft = 25 * 60; // 25 minutes par défaut
 let isRunning = false;
 let isPaused = false;
+let isFinished = false;
 
 const timerInput = document.getElementById('timer-input');
 const startButton = document.getElementById('start');
@@ -81,7 +82,7 @@ function updateButtonVisibility() {
 }
 
 function updateInputState() {
-    if (isRunning || isPaused) {
+    if (isRunning || isPaused || isFinished) {
         timerInput.setAttribute('disabled', 'true');
         timerInput.classList.add('no-hover');
     } else {
@@ -116,6 +117,7 @@ function loadSession() {
         timeLeft = session.timeLeft;
         isRunning = session.isRunning;
         isPaused = session.isPaused;
+        isFinished = timeLeft === 0; // Définir isFinished à true si le temps est écoulé
 
         updateDisplay();
         updateButtonVisibility();
@@ -132,22 +134,43 @@ function loadSession() {
                     clearInterval(timer);
                     isRunning = false;
                     isPaused = false;
+                    isFinished = true;
                     saveSession();
-                    updateButtonVisibility();
-                    updateInputState();
-                    notifyUser();
+                    handleSessionEnd();
                 }
             }, 1000);
+        } else if (isFinished) {
+            handleSessionEnd(); // Gérer la fin de session si le temps est déjà écoulé
         }
     } else {
         resetTimer();
     }
 }
 
+function handleSessionEnd() {
+    // Mettre à jour le localStorage pour indiquer que la session est terminée
+    const session = {
+        name: generateSessionName(),
+        timeLeft: 0,
+        isRunning: false,
+        isPaused: false
+    };
+    localStorage.setItem('pomodoroSession', JSON.stringify(session));
+
+    // Cacher tous les boutons
+    startButton.style.display = 'none';
+    pauseButton.style.display = 'none';
+    resetButton.style.display = 'none';
+
+    // Afficher un message ou notifier l'utilisateur
+    notifyUser();
+}
+
 function startTimer() {
     if (!isRunning) {
         isRunning = true;
         isPaused = false;
+        isFinished = false;
         saveSession(); // Sauvegarder l'état
         updateButtonVisibility();
         updateInputState();
@@ -160,10 +183,11 @@ function startTimer() {
                 clearInterval(timer);
                 isRunning = false;
                 isPaused = false;
+                isFinished = true;
                 saveSession(); // Sauvegarder l'état final
                 updateButtonVisibility();
                 updateInputState();
-                notifyUser();
+                handleSessionEnd();
             }
         }, 1000);
     }
@@ -173,6 +197,7 @@ function pauseTimer() {
     clearInterval(timer);
     isRunning = false;
     isPaused = true;
+    isFinished = false;
     saveSession(); // Sauvegarder l'état
     startButton.textContent = 'Resume'; // Mettre à jour le texte en "Resume" lors de la pause
     updateButtonVisibility();
@@ -183,6 +208,7 @@ function resetTimer() {
     clearInterval(timer);
     isRunning = false;
     isPaused = false;
+    isFinished = false;
     timeLeft = 25 * 60; // Remettre au temps par défaut
     localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
