@@ -148,6 +148,9 @@ function saveCompletedSession(session) {
 // Fonction pour charger une session depuis le localStorage
 function loadSession() {
     const sessionData = localStorage.getItem('pomodoroSession');
+    const noTasksMessage = document.getElementById('no-tasks-message');
+    const addTaskButton = document.getElementById('add-task');
+
     if (sessionData) {
         const session = JSON.parse(sessionData);
         if (session.isCompleted) {
@@ -162,8 +165,26 @@ function loadSession() {
 
         sessionNameInput.value = session.name || ''; // Charger le nom de la session
 
-        if (session.tasks) {
+        if (session.tasks && session.tasks.length > 0) {
             loadTasks(session.tasks); // Charger les tâches
+            if (noTasksMessage) noTasksMessage.remove(); // Supprimer le message si des tâches existent
+        } else {
+            // Afficher le message "No tasks defined" si aucune tâche n'est présente
+            if (!noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                document.getElementById('tasks-list').appendChild(message);
+            }
+        }
+
+        // Désactiver le bouton d'ajout de tâches si la session est en cours
+        if (isRunning) {
+            addTaskButton.classList.add('disabled');
+            addTaskButton.setAttribute('disabled', 'true');
+        } else {
+            addTaskButton.classList.remove('disabled');
+            addTaskButton.removeAttribute('disabled');
         }
 
         updateDisplay();
@@ -196,6 +217,16 @@ function loadSession() {
         const incompleteTasks = loadIncompleteTasks();
         if (incompleteTasks.length > 0) {
             loadTasks(incompleteTasks);
+            if (noTasksMessage) noTasksMessage.remove(); // Supprimer le message si des tâches existent
+        } else {
+            // Afficher le message "No tasks defined" si aucune tâche n'est présente
+            if (!noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                message.style.marginTop = '30px';
+                document.getElementById('tasks-list').appendChild(message);
+            }
         }
     }
 }
@@ -279,6 +310,18 @@ function loadTasks(tasks) {
 
         deleteButton.addEventListener('click', () => {
             tasksList.removeChild(taskItem);
+
+            // Vérifier s'il reste des tâches, sinon afficher le message "No tasks defined"
+            const remainingTasks = document.querySelectorAll('.task-input');
+            const noTasksMessage = document.getElementById('no-tasks-message');
+            if (remainingTasks.length === 0 && !noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                message.style.marginTop = '30px';
+                tasksList.appendChild(message);
+            }
+
             saveSession();
         });
 
@@ -295,51 +338,7 @@ function loadTasks(tasks) {
     }
 }
 
-// rendre les tâches cliquables après la fin du timer pour marquer validated
-// function makeTasksValidatable() {
-//     const taskInputs = document.querySelectorAll('.task-input');
-//     const deleteButtons = document.querySelectorAll('.delete-task');
-//     const addTaskBtn = document.getElementById('add-task');
 
-//     // masquer ajout et suppression pendant validation
-//     if (addTaskBtn) addTaskBtn.classList.add('disabled');
-//     deleteButtons.forEach(btn => btn.classList.add('disabled'));
-
-//     taskInputs.forEach(input => {
-//         // s'assurer activé pour pouvoir cliquer
-//         input.removeAttribute('disabled');
-//         input.classList.add('clickable');
-//         input.style.cursor = 'pointer';
-
-//         // éviter d'attacher plusieurs fois
-//         if (input.__validListenerAttached) return;
-
-//         input.addEventListener('click', function () {
-//             if (this.dataset.validated !== 'true') {
-//                 console.log('Tâche validée :', this.value);
-//                 this.dataset.validated = 'true';
-//                 this.classList.add('validated');
-
-//                 // Ajouter le bouton "X" pour retirer la validation
-//                 const removeValidationButton = document.createElement('button');
-//                 removeValidationButton.textContent = 'X';
-//                 removeValidationButton.classList.add('remove-validation');
-//                 removeValidationButton.addEventListener('click', (e) => {
-//                     e.stopPropagation(); // Empêcher le clic de valider à nouveau
-//                     this.dataset.validated = 'false';
-//                     this.classList.remove('validated');
-//                     removeValidationButton.remove();
-//                     saveSession();
-//                 });
-//                 this.parentElement.appendChild(removeValidationButton);
-
-//                 saveSession();
-//             }
-//         });
-
-//         input.__validListenerAttached = true;
-//     });
-// }
 
 function handleSessionEnd() {
     // Marquer la session comme finie et sauvegarder l'état (incluant tasks)
@@ -365,6 +364,21 @@ function handleSessionEnd() {
 
 function startTimer() {
     if (!isRunning) {
+        // Vérifier si aucune tâche n'est définie
+        const taskInputs = document.querySelectorAll('.task-input');
+        const noTasksMessage = document.getElementById('no-tasks-message');
+
+        if (taskInputs.length === 0) {
+            if (!noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                document.getElementById('tasks-list').appendChild(message);
+            }
+        } else if (noTasksMessage) {
+            noTasksMessage.remove(); // Supprimer le message si des tâches existent
+        }
+
         // Supprimer les tâches incomplètes du localStorage
         localStorage.removeItem('incompleteTasks');
 
@@ -594,11 +608,32 @@ addTaskButton.addEventListener('click', () => {
 
     deleteButton.addEventListener('click', () => {
         tasksList.removeChild(taskItem);
+
+        // Vérifier s'il reste des tâches, sinon afficher le message "No tasks defined"
+        const remainingTasks = document.querySelectorAll('.task-input');
+        const noTasksMessage = document.getElementById('no-tasks-message');
+        if (remainingTasks.length === 0 && !noTasksMessage) {
+            const message = document.createElement('h5');
+            message.id = 'no-tasks-message';
+            message.textContent = 'No tasks defined';
+            message.style.marginTop = '30px';
+            tasksList.appendChild(message);
+        }
+
+        saveSession();
     });
 
     taskItem.appendChild(taskInput);
     taskItem.appendChild(deleteButton);
     tasksList.appendChild(taskItem);
+
+    // Supprimer le message "No tasks defined" si une tâche est ajoutée
+    const noTasksMessage = document.getElementById('no-tasks-message');
+    if (noTasksMessage) {
+        noTasksMessage.remove();
+    }
+
+    saveSession();
 });
 
 // Désactiver les champs de tâches au démarrage

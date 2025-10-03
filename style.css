@@ -158,17 +158,10 @@ h1 img:nth-of-type(4) {
 }
 
 .controls button.secondary {
-    /* background: #bdc3c7;
-    color: #2c3e50;
+    background: #bdc3c700;
+    color: #bdc3c7;
     border: none;
-    padding: 10px 20px;
-    margin: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px; */
-    background: #bdc3c7;
-    color: #fff;
-    border: none;
+    border: 3px solid #bdc3c7;
     padding: 10px 20px;
     margin: 5px 0;
     border-radius: 5px;
@@ -179,7 +172,8 @@ h1 img:nth-of-type(4) {
 }
 
 .controls button.secondary:hover {
-    background: #95a5a6;
+    background: #bdc3c7;
+    color: #fff;
 }
 
 .session-name-input {
@@ -257,6 +251,14 @@ h1 img:nth-of-type(4) {
     list-style: none;
     padding: 0;
     margin: 10px 0;
+}
+
+#tasks-list #no-tasks-message{
+    font-family: 'Dela Gothic One', cursive;
+    text-transform: uppercase;
+    color: #aaa;
+    text-align: center;
+    margin: 20px 0;
 }
 
 #tasks-list li {
