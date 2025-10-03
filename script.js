@@ -14,7 +14,7 @@ const completeButton = document.createElement('button');
 completeButton.id = 'complete';
 completeButton.textContent = 'Complete';
 completeButton.style.display = 'none';
-completeButton.classList.add('secondary');
+completeButton.classList.add('primary');
 document.querySelector('.controls').appendChild(completeButton);
 
 // Ajouter un champ d'entrée pour le nom de la session dans le DOM
@@ -266,8 +266,15 @@ function loadTasks(tasks) {
         }
 
         const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Supprimer';
         deleteButton.classList.add('delete-task');
+
+        // Ajouter une image au bouton supprimer
+        const deleteIcon = document.createElement('img');
+        deleteIcon.src = '/assets/delete.svg';
+        deleteIcon.alt = 'Supprimer';
+        deleteIcon.style.width = '16px';
+        deleteIcon.style.height = '16px';
+        deleteButton.appendChild(deleteIcon);
 
         deleteButton.addEventListener('click', () => {
             tasksList.removeChild(taskItem);
@@ -566,8 +573,15 @@ addTaskButton.addEventListener('click', () => {
     taskInput.classList.add('task-input');
 
     const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Supprimer';
     deleteButton.classList.add('delete-task');
+
+    // Ajouter une image au bouton supprimer
+    const deleteIcon = document.createElement('img');
+    deleteIcon.src = '/assets/delete.svg';
+    deleteIcon.alt = 'Supprimer';
+    deleteIcon.style.width = '16px';
+    deleteIcon.style.height = '16px';
+    deleteButton.appendChild(deleteIcon);
 
     deleteButton.addEventListener('click', () => {
         tasksList.removeChild(taskItem);
