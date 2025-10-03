@@ -3,6 +3,7 @@ let timeLeft = 25 * 60; // 25 minutes par défaut
 let isRunning = false;
 let isPaused = false;
 let isFinished = false;
+let taskIdCounter = 0; // Compteur global pour générer des IDs uniques
 
 const timerInput = document.getElementById('timer-input');
 const startButton = document.getElementById('start');
@@ -14,7 +15,7 @@ const completeButton = document.createElement('button');
 completeButton.id = 'complete';
 completeButton.textContent = 'Complete';
 completeButton.style.display = 'none';
-completeButton.classList.add('secondary');
+completeButton.classList.add('primary');
 document.querySelector('.controls').appendChild(completeButton);
 
 // Ajouter un champ d'entrée pour le nom de la session dans le DOM
@@ -147,6 +148,9 @@ function saveCompletedSession(session) {
 // Fonction pour charger une session depuis le localStorage
 function loadSession() {
     const sessionData = localStorage.getItem('pomodoroSession');
+    const noTasksMessage = document.getElementById('no-tasks-message');
+    const addTaskButton = document.getElementById('add-task');
+
     if (sessionData) {
         const session = JSON.parse(sessionData);
         if (session.isCompleted) {
@@ -161,8 +165,26 @@ function loadSession() {
 
         sessionNameInput.value = session.name || ''; // Charger le nom de la session
 
-        if (session.tasks) {
+        if (session.tasks && session.tasks.length > 0) {
             loadTasks(session.tasks); // Charger les tâches
+            if (noTasksMessage) noTasksMessage.remove(); // Supprimer le message si des tâches existent
+        } else {
+            // Afficher le message "No tasks defined" si aucune tâche n'est présente
+            if (!noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                document.getElementById('tasks-list').appendChild(message);
+            }
+        }
+
+        // Désactiver le bouton d'ajout de tâches si la session est en cours
+        if (isRunning) {
+            addTaskButton.classList.add('disabled');
+            addTaskButton.setAttribute('disabled', 'true');
+        } else {
+            addTaskButton.classList.remove('disabled');
+            addTaskButton.removeAttribute('disabled');
         }
 
         updateDisplay();
@@ -195,6 +217,16 @@ function loadSession() {
         const incompleteTasks = loadIncompleteTasks();
         if (incompleteTasks.length > 0) {
             loadTasks(incompleteTasks);
+            if (noTasksMessage) noTasksMessage.remove(); // Supprimer le message si des tâches existent
+        } else {
+            // Afficher le message "No tasks defined" si aucune tâche n'est présente
+            if (!noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                message.style.marginTop = '30px';
+                document.getElementById('tasks-list').appendChild(message);
+            }
         }
     }
 }
@@ -266,11 +298,30 @@ function loadTasks(tasks) {
         }
 
         const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Supprimer';
         deleteButton.classList.add('delete-task');
+
+        // Ajouter une image au bouton supprimer
+        const deleteIcon = document.createElement('img');
+        deleteIcon.src = '/assets/delete.svg';
+        deleteIcon.alt = 'Supprimer';
+        deleteIcon.style.width = '16px';
+        deleteIcon.style.height = '16px';
+        deleteButton.appendChild(deleteIcon);
 
         deleteButton.addEventListener('click', () => {
             tasksList.removeChild(taskItem);
+
+            // Vérifier s'il reste des tâches, sinon afficher le message "No tasks defined"
+            const remainingTasks = document.querySelectorAll('.task-input');
+            const noTasksMessage = document.getElementById('no-tasks-message');
+            if (remainingTasks.length === 0 && !noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                message.style.marginTop = '30px';
+                tasksList.appendChild(message);
+            }
+
             saveSession();
         });
 
@@ -287,50 +338,7 @@ function loadTasks(tasks) {
     }
 }
 
-// rendre les tâches cliquables après la fin du timer pour marquer validated
-function makeTasksValidatable() {
-    const taskInputs = document.querySelectorAll('.task-input');
-    const deleteButtons = document.querySelectorAll('.delete-task');
-    const addTaskBtn = document.getElementById('add-task');
 
-    // masquer ajout et suppression pendant validation
-    if (addTaskBtn) addTaskBtn.classList.add('disabled');
-    deleteButtons.forEach(btn => btn.classList.add('disabled'));
-
-    taskInputs.forEach(input => {
-        // s'assurer activé pour pouvoir cliquer
-        input.removeAttribute('disabled');
-        input.classList.add('clickable');
-        input.style.cursor = 'pointer';
-
-        // éviter d'attacher plusieurs fois
-        if (input.__validListenerAttached) return;
-
-        input.addEventListener('click', function () {
-            if (this.dataset.validated !== 'true') {
-                this.dataset.validated = 'true';
-                this.classList.add('validated');
-
-                // Ajouter le bouton "X" pour retirer la validation
-                const removeValidationButton = document.createElement('button');
-                removeValidationButton.textContent = 'X';
-                removeValidationButton.classList.add('remove-validation');
-                removeValidationButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Empêcher le clic de valider à nouveau
-                    this.dataset.validated = 'false';
-                    this.classList.remove('validated');
-                    removeValidationButton.remove();
-                    saveSession();
-                });
-                this.parentElement.appendChild(removeValidationButton);
-
-                saveSession();
-            }
-        });
-
-        input.__validListenerAttached = true;
-    });
-}
 
 function handleSessionEnd() {
     // Marquer la session comme finie et sauvegarder l'état (incluant tasks)
@@ -347,12 +355,33 @@ function handleSessionEnd() {
     // Rendre les tâches cliquables pour validation
     makeTasksValidatable();
 
+    // ajouter une classe "timer-finished" au body
+    document.body.classList.add('timer-finished');
+
+    // Lancer le mini-jeu
+    startTomatoGame();
+
     // Afficher un message ou notifier l'utilisateur
     notifyUser();
 }
 
 function startTimer() {
     if (!isRunning) {
+        // Vérifier si aucune tâche n'est définie
+        const taskInputs = document.querySelectorAll('.task-input');
+        const noTasksMessage = document.getElementById('no-tasks-message');
+
+        if (taskInputs.length === 0) {
+            if (!noTasksMessage) {
+                const message = document.createElement('h5');
+                message.id = 'no-tasks-message';
+                message.textContent = 'No tasks defined';
+                document.getElementById('tasks-list').appendChild(message);
+            }
+        } else if (noTasksMessage) {
+            noTasksMessage.remove(); // Supprimer le message si des tâches existent
+        }
+
         // Supprimer les tâches incomplètes du localStorage
         localStorage.removeItem('incompleteTasks');
 
@@ -421,6 +450,9 @@ function resetTimer() {
 function handleSessionComplete() {
     // Vérifier si le champ de nom de session est vide, sinon générer un nom par défaut
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
+
+    // remove classe "timer-finished" au body
+    document.body.classList.remove('timer-finished');
 
     // Récupérer les tâches (avec validated)
     const allTasks = saveTasks();
@@ -565,17 +597,49 @@ addTaskButton.addEventListener('click', () => {
     taskInput.placeholder = 'Nom de la tâche';
     taskInput.classList.add('task-input');
 
+    // Ajouter un ID unique à la tâche
+    const taskId = `task-${taskIdCounter++}`;
+    taskInput.dataset.taskId = taskId;
+
     const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Supprimer';
     deleteButton.classList.add('delete-task');
+
+    // Ajouter une image au bouton supprimer
+    const deleteIcon = document.createElement('img');
+    deleteIcon.src = '/assets/delete.svg';
+    deleteIcon.alt = 'Supprimer';
+    deleteIcon.style.width = '16px';
+    deleteIcon.style.height = '16px';
+    deleteButton.appendChild(deleteIcon);
 
     deleteButton.addEventListener('click', () => {
         tasksList.removeChild(taskItem);
+
+        // Vérifier s'il reste des tâches, sinon afficher le message "No tasks defined"
+        const remainingTasks = document.querySelectorAll('.task-input');
+        const noTasksMessage = document.getElementById('no-tasks-message');
+        if (remainingTasks.length === 0 && !noTasksMessage) {
+            const message = document.createElement('h5');
+            message.id = 'no-tasks-message';
+            message.textContent = 'No tasks defined';
+            message.style.marginTop = '30px';
+            tasksList.appendChild(message);
+        }
+
+        saveSession();
     });
 
     taskItem.appendChild(taskInput);
     taskItem.appendChild(deleteButton);
     tasksList.appendChild(taskItem);
+
+    // Supprimer le message "No tasks defined" si une tâche est ajoutée
+    const noTasksMessage = document.getElementById('no-tasks-message');
+    if (noTasksMessage) {
+        noTasksMessage.remove();
+    }
+
+    saveSession();
 });
 
 // Désactiver les champs de tâches au démarrage
@@ -599,3 +663,195 @@ startButton.addEventListener('click', () => {
     session.tasks = tasks;
     localStorage.setItem('pomodoroSession', JSON.stringify(session));
 });
+
+// Mini-jeu des tomates
+function startTomatoGame() {
+    const body = document.body;
+
+    // Ajouter le curseur personnalisé
+    const crosshair = document.createElement('img');
+    crosshair.src = '/assets/Crosshair.svg';
+    crosshair.alt = 'Crosshair';
+    crosshair.style.position = 'absolute';
+    crosshair.style.width = '30px';
+    crosshair.style.height = '30px';
+    crosshair.style.pointerEvents = 'none';
+    crosshair.style.transform = 'translate(-50%, -50%)';
+    crosshair.style.zIndex = '1000';
+    body.appendChild(crosshair);
+
+    // Suivre la position de la souris
+    document.addEventListener('mousemove', (event) => {
+        crosshair.style.left = `${event.pageX}px`;
+        crosshair.style.top = `${event.pageY}px`;
+    });
+
+    let lastRandomIndex = -1; // Stocker le dernier index aléatoire
+
+    function spawnTomato() {
+        const tomato = document.createElement('img');
+        tomato.src = '/tomatoes-title/tomato-clear.png';
+        tomato.alt = 'Tomato';
+        tomato.style.position = 'absolute';
+        tomato.style.width = '80px';
+        tomato.style.height = '80px';
+        tomato.style.left = '50%';
+        tomato.style.bottom = '-100px'; // Commencer en dehors de l'écran
+        tomato.style.transform = 'translate(-50%, 0)';
+        tomato.style.zIndex = '999';
+        tomato.style.userSelect = 'none'; // Empêcher le glisser-déposer
+        tomato.style.pointerEvents = 'none'; // Empêcher les interactions avec la tomate
+        document.body.appendChild(tomato);
+
+        // random rotation
+        const randomRotation = Math.floor(Math.random() * 360);
+
+        // Animation de bounce depuis le bas
+        tomato.animate([
+            { bottom: '-100px', transform: `translate(-50%, 0) scale(0.8) rotate(${randomRotation}deg)`, opacity: 0 },
+            { bottom: '20px', transform: `translate(-50%, 0) scale(1.2) rotate(${randomRotation}deg)`, opacity: 1 },
+            { bottom: '0', transform: `translate(-50%, 0) scale(1) rotate(${randomRotation}deg)` }
+        ], {
+            duration: 800,
+            easing: 'ease-out',
+            fill: 'forwards'
+        });
+
+        // Gérer le clic pour lancer la tomate
+        document.addEventListener('click', (event) => {
+
+            if (event.target.classList.contains('task-input')) {
+                const taskId = event.target.dataset.taskId;
+                tomato.dataset.taskId = taskId; // Associer la tomate à la tâche
+            }
+
+            if (event.target.getAttribute('id') === 'complete') {
+                // Ne pas lancer la tomate si on clique sur le bouton "Complete"
+                removeAllTomatoes();
+                tomato.remove();
+                crosshair.remove();
+                return;
+            }
+
+            setTimeout(() => {
+                spawnTomato(); // Générer une nouvelle tomate
+            }, 200);
+
+            const targetX = event.pageX;
+            let targetY = event.pageY + 40;
+
+            targetY = window.innerHeight - targetY;
+
+            const distance = Math.hypot(targetX - window.innerWidth / 2, targetY);
+            const duration = Math.min(400, Math.max(300, distance * 1.5)); // Réduire la durée pour une animation plus rapide
+
+            // Animation de la tomate sans easing
+            const animation = tomato.animate([
+                { bottom: '0', left: '50%' },
+                { bottom: `${targetY}px`, left: `${targetX}px` }
+            ], {
+                duration: duration,
+                easing: 'cubic-bezier(0.11, 0, 0.5, 0)', // Pas de easing
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => {
+                tomato.style.bottom = `${targetY}px`;
+                tomato.style.left = `${targetX}px`;
+                tomato.style.transform = 'translate(-50%, 0) scale(1.3)';
+
+                // Générer un index aléatoire différent du précédent
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * 4) + 1;
+                } while (randomIndex === lastRandomIndex);
+                lastRandomIndex = randomIndex;
+
+                tomato.src = `/tomatoes-title/tomato-${randomIndex}.png`;
+            };
+        }, { once: true });
+    }
+
+    spawnTomato();
+}
+
+function removeTomatoesByTaskId(taskId) {
+    const tomatoes = document.querySelectorAll(`img[data-task-id="${taskId}"]`);
+    tomatoes.forEach(tomato => tomato.remove());
+}
+
+// Modifier la logique de dévalidation des tâches
+function makeTasksValidatable() {
+    const taskInputs = document.querySelectorAll('.task-input');
+    const deleteButtons = document.querySelectorAll('.delete-task');
+    const addTaskBtn = document.getElementById('add-task');
+
+    if (addTaskBtn) addTaskBtn.classList.add('disabled');
+    deleteButtons.forEach(btn => btn.classList.add('disabled'));
+
+    taskInputs.forEach(input => {
+        input.removeAttribute('disabled');
+        //readonly pour éviter modification
+        input.setAttribute('readonly', 'true');
+        input.classList.add('clickable');
+
+        if (input.__validListenerAttached) return;
+
+        input.addEventListener('click', function () {
+            if (this.dataset.validated !== 'true') {
+                this.dataset.validated = 'true';
+                this.classList.add('validated');
+
+                const removeValidationButton = document.createElement('button');
+                removeValidationButton.classList.add('remove-validation');
+                // Ajouter une image au bouton retirer la validation
+                const removeIcon = document.createElement('img');
+                removeIcon.src = '/assets/back.svg';
+                removeIcon.alt = 'Retirer la validation';
+                removeIcon.style.width = '16px';
+                removeIcon.style.height = '16px';
+                removeValidationButton.appendChild(removeIcon);
+
+                removeValidationButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.dataset.validated = 'false';
+                    this.classList.remove('validated');
+                    removeValidationButton.remove();
+
+                    // Supprimer les tomates associées à cette tâche
+                    const taskId = this.dataset.taskId;
+                    removeTomatoesByTaskId(taskId);
+
+                    saveSession();
+                });
+                this.parentElement.appendChild(removeValidationButton);
+
+                saveSession();
+            }
+        });
+
+        input.__validListenerAttached = true;
+    });
+}
+
+function removeAllTomatoes() {
+    // toutes img[src*="tomato"]sauf tomates dans le h1
+    const tomatoes = Array.from(document.querySelectorAll('img[src*="tomato"]')).filter(img => !img.closest('h1'));
+    tomatoes.forEach((tomato, index) => {
+        const delay = Math.random() * 500; // Délai aléatoire entre 0 et 0.5s
+        setTimeout(() => {
+            const animation = tomato.animate([
+                { opacity: 1, transform: 'translateY(0)' },
+                { opacity: 0, transform: 'translateY(50px)' }
+            ], {
+                duration: 500,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => {
+                tomato.remove();
+            };
+        }, delay);
+    });
+}
