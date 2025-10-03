@@ -3,6 +3,7 @@ let timeLeft = 25 * 60; // 25 minutes par défaut
 let isRunning = false;
 let isPaused = false;
 let isFinished = false;
+let taskIdCounter = 0; // Compteur global pour générer des IDs uniques
 
 const timerInput = document.getElementById('timer-input');
 const startButton = document.getElementById('start');
@@ -295,49 +296,50 @@ function loadTasks(tasks) {
 }
 
 // rendre les tâches cliquables après la fin du timer pour marquer validated
-function makeTasksValidatable() {
-    const taskInputs = document.querySelectorAll('.task-input');
-    const deleteButtons = document.querySelectorAll('.delete-task');
-    const addTaskBtn = document.getElementById('add-task');
+// function makeTasksValidatable() {
+//     const taskInputs = document.querySelectorAll('.task-input');
+//     const deleteButtons = document.querySelectorAll('.delete-task');
+//     const addTaskBtn = document.getElementById('add-task');
 
-    // masquer ajout et suppression pendant validation
-    if (addTaskBtn) addTaskBtn.classList.add('disabled');
-    deleteButtons.forEach(btn => btn.classList.add('disabled'));
+//     // masquer ajout et suppression pendant validation
+//     if (addTaskBtn) addTaskBtn.classList.add('disabled');
+//     deleteButtons.forEach(btn => btn.classList.add('disabled'));
 
-    taskInputs.forEach(input => {
-        // s'assurer activé pour pouvoir cliquer
-        input.removeAttribute('disabled');
-        input.classList.add('clickable');
-        input.style.cursor = 'pointer';
+//     taskInputs.forEach(input => {
+//         // s'assurer activé pour pouvoir cliquer
+//         input.removeAttribute('disabled');
+//         input.classList.add('clickable');
+//         input.style.cursor = 'pointer';
 
-        // éviter d'attacher plusieurs fois
-        if (input.__validListenerAttached) return;
+//         // éviter d'attacher plusieurs fois
+//         if (input.__validListenerAttached) return;
 
-        input.addEventListener('click', function () {
-            if (this.dataset.validated !== 'true') {
-                this.dataset.validated = 'true';
-                this.classList.add('validated');
+//         input.addEventListener('click', function () {
+//             if (this.dataset.validated !== 'true') {
+//                 console.log('Tâche validée :', this.value);
+//                 this.dataset.validated = 'true';
+//                 this.classList.add('validated');
 
-                // Ajouter le bouton "X" pour retirer la validation
-                const removeValidationButton = document.createElement('button');
-                removeValidationButton.textContent = 'X';
-                removeValidationButton.classList.add('remove-validation');
-                removeValidationButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Empêcher le clic de valider à nouveau
-                    this.dataset.validated = 'false';
-                    this.classList.remove('validated');
-                    removeValidationButton.remove();
-                    saveSession();
-                });
-                this.parentElement.appendChild(removeValidationButton);
+//                 // Ajouter le bouton "X" pour retirer la validation
+//                 const removeValidationButton = document.createElement('button');
+//                 removeValidationButton.textContent = 'X';
+//                 removeValidationButton.classList.add('remove-validation');
+//                 removeValidationButton.addEventListener('click', (e) => {
+//                     e.stopPropagation(); // Empêcher le clic de valider à nouveau
+//                     this.dataset.validated = 'false';
+//                     this.classList.remove('validated');
+//                     removeValidationButton.remove();
+//                     saveSession();
+//                 });
+//                 this.parentElement.appendChild(removeValidationButton);
 
-                saveSession();
-            }
-        });
+//                 saveSession();
+//             }
+//         });
 
-        input.__validListenerAttached = true;
-    });
-}
+//         input.__validListenerAttached = true;
+//     });
+// }
 
 function handleSessionEnd() {
     // Marquer la session comme finie et sauvegarder l'état (incluant tasks)
@@ -575,6 +577,10 @@ addTaskButton.addEventListener('click', () => {
     taskInput.placeholder = 'Nom de la tâche';
     taskInput.classList.add('task-input');
 
+    // Ajouter un ID unique à la tâche
+    const taskId = `task-${taskIdCounter++}`;
+    taskInput.dataset.taskId = taskId;
+
     const deleteButton = document.createElement('button');
     deleteButton.classList.add('delete-task');
 
@@ -649,13 +655,43 @@ function startTomatoGame() {
         tomato.style.width = '80px';
         tomato.style.height = '80px';
         tomato.style.left = '50%';
-        tomato.style.bottom = '0';
+        tomato.style.bottom = '-100px'; // Commencer en dehors de l'écran
         tomato.style.transform = 'translate(-50%, 0)';
         tomato.style.zIndex = '999';
-        body.appendChild(tomato);
+        tomato.style.userSelect = 'none'; // Empêcher le glisser-déposer
+        tomato.style.pointerEvents = 'none'; // Empêcher les interactions avec la tomate
+        document.body.appendChild(tomato);
+
+        // random rotation
+        const randomRotation = Math.floor(Math.random() * 360);
+
+        // Animation de bounce depuis le bas
+        tomato.animate([
+            { bottom: '-100px', transform: `translate(-50%, 0) scale(0.8) rotate(${randomRotation}deg)`, opacity: 0 },
+            { bottom: '20px', transform: `translate(-50%, 0) scale(1.2) rotate(${randomRotation}deg)`, opacity: 1 },
+            { bottom: '0', transform: `translate(-50%, 0) scale(1) rotate(${randomRotation}deg)` }
+        ], {
+            duration: 800,
+            easing: 'ease-out',
+            fill: 'forwards'
+        });
 
         // Gérer le clic pour lancer la tomate
         document.addEventListener('click', (event) => {
+
+            if (event.target.classList.contains('task-input')) {
+                const taskId = event.target.dataset.taskId;
+                tomato.dataset.taskId = taskId; // Associer la tomate à la tâche
+            }
+
+            if (event.target.getAttribute('id') === 'complete') {
+                // Ne pas lancer la tomate si on clique sur le bouton "Complete"
+                removeAllTomatoes();
+                tomato.remove();
+                crosshair.remove();
+                return;
+            }
+
             setTimeout(() => {
                 spawnTomato(); // Générer une nouvelle tomate
             }, 200);
@@ -674,7 +710,7 @@ function startTomatoGame() {
                 { bottom: `${targetY}px`, left: `${targetX}px` }
             ], {
                 duration: duration,
-                easing: 'linear', // Pas de easing
+                easing: 'cubic-bezier(0.11, 0, 0.5, 0)', // Pas de easing
                 fill: 'forwards'
             });
 
@@ -696,4 +732,86 @@ function startTomatoGame() {
     }
 
     spawnTomato();
+}
+
+function removeTomatoesByTaskId(taskId) {
+    const tomatoes = document.querySelectorAll(`img[data-task-id="${taskId}"]`);
+    tomatoes.forEach(tomato => tomato.remove());
+}
+
+// Modifier la logique de dévalidation des tâches
+function makeTasksValidatable() {
+    const taskInputs = document.querySelectorAll('.task-input');
+    const deleteButtons = document.querySelectorAll('.delete-task');
+    const addTaskBtn = document.getElementById('add-task');
+
+    if (addTaskBtn) addTaskBtn.classList.add('disabled');
+    deleteButtons.forEach(btn => btn.classList.add('disabled'));
+
+    taskInputs.forEach(input => {
+        input.removeAttribute('disabled');
+        //readonly pour éviter modification
+        input.setAttribute('readonly', 'true');
+        input.classList.add('clickable');
+        input.style.cursor = 'pointer';
+
+        if (input.__validListenerAttached) return;
+
+        input.addEventListener('click', function () {
+            if (this.dataset.validated !== 'true') {
+                this.dataset.validated = 'true';
+                this.classList.add('validated');
+
+                const removeValidationButton = document.createElement('button');
+                removeValidationButton.classList.add('remove-validation');
+                // Ajouter une image au bouton retirer la validation
+                const removeIcon = document.createElement('img');
+                removeIcon.src = '/assets/back.svg';
+                removeIcon.alt = 'Retirer la validation';
+                removeIcon.style.width = '16px';
+                removeIcon.style.height = '16px';
+                removeValidationButton.appendChild(removeIcon);
+
+                removeValidationButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.dataset.validated = 'false';
+                    this.classList.remove('validated');
+                    removeValidationButton.remove();
+
+                    // Supprimer les tomates associées à cette tâche
+                    const taskId = this.dataset.taskId;
+                    removeTomatoesByTaskId(taskId);
+
+                    saveSession();
+                });
+                this.parentElement.appendChild(removeValidationButton);
+
+                saveSession();
+            }
+        });
+
+        input.__validListenerAttached = true;
+    });
+}
+
+function removeAllTomatoes() {
+    // toutes img[src*="tomato"]sauf tomates dans le h1
+    const tomatoes = Array.from(document.querySelectorAll('img[src*="tomato"]')).filter(img => !img.closest('h1'));
+    tomatoes.forEach((tomato, index) => {
+        const delay = Math.random() * 500; // Délai aléatoire entre 0 et 0.5s
+        setTimeout(() => {
+            const animation = tomato.animate([
+                { opacity: 1, transform: 'translateY(0)' },
+                { opacity: 0, transform: 'translateY(50px)' }
+            ], {
+                duration: 500,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => {
+                tomato.remove();
+            };
+        }, delay);
+    });
 }

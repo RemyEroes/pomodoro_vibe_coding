@@ -270,7 +270,7 @@ h1 img:nth-of-type(4) {
     padding: 8px;
     border-radius: 5px;
     margin-right: 10px;
-    font-size: 14px;
+    font-size: 20px;
     font-family: 'Dela Gothic One', cursive;
     border: 1px solid #ddd;
     box-sizing: border-box;
@@ -292,8 +292,9 @@ h1 img:nth-of-type(4) {
 }
 
 .task-input.validated {
-    background-color: #8bf13c;
-    color: #ffffff;
+   background-color: #ebdede;
+    /* color: #d42113; */
+    box-shadow: transparent;
 }
 
 .delete-task {
@@ -319,17 +320,18 @@ h1 img:nth-of-type(4) {
     display: none;
 }
 
-
-@keyframes test {
-    0% {
-        transform: translateY(200px) translateX(100px) rotate(80deg) scale(1.5);
-    }
-
-    100% {
-        transform: translateY(0) translateX(0) rotate(0) scale(1);
-        opacity: 1;
-    }
-
+.remove-validation{
+    background: #D42113;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex
+;
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes tomato-throw-1 {
