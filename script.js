@@ -354,6 +354,9 @@ function handleSessionEnd() {
     // Rendre les tâches cliquables pour validation
     makeTasksValidatable();
 
+    // Lancer le mini-jeu
+    startTomatoGame();
+
     // Afficher un message ou notifier l'utilisateur
     notifyUser();
 }
@@ -613,3 +616,84 @@ startButton.addEventListener('click', () => {
     session.tasks = tasks;
     localStorage.setItem('pomodoroSession', JSON.stringify(session));
 });
+
+// Mini-jeu des tomates
+function startTomatoGame() {
+    const body = document.body;
+
+    // Ajouter le curseur personnalisé
+    const crosshair = document.createElement('img');
+    crosshair.src = '/assets/Crosshair.svg';
+    crosshair.alt = 'Crosshair';
+    crosshair.style.position = 'absolute';
+    crosshair.style.width = '30px';
+    crosshair.style.height = '30px';
+    crosshair.style.pointerEvents = 'none';
+    crosshair.style.transform = 'translate(-50%, -50%)';
+    crosshair.style.zIndex = '1000';
+    body.appendChild(crosshair);
+
+    // Suivre la position de la souris
+    document.addEventListener('mousemove', (event) => {
+        crosshair.style.left = `${event.pageX}px`;
+        crosshair.style.top = `${event.pageY}px`;
+    });
+
+    let lastRandomIndex = -1; // Stocker le dernier index aléatoire
+
+    function spawnTomato() {
+        const tomato = document.createElement('img');
+        tomato.src = '/tomatoes-title/tomato-clear.png';
+        tomato.alt = 'Tomato';
+        tomato.style.position = 'absolute';
+        tomato.style.width = '80px';
+        tomato.style.height = '80px';
+        tomato.style.left = '50%';
+        tomato.style.bottom = '0';
+        tomato.style.transform = 'translate(-50%, 0)';
+        tomato.style.zIndex = '999';
+        body.appendChild(tomato);
+
+        // Gérer le clic pour lancer la tomate
+        document.addEventListener('click', (event) => {
+            setTimeout(() => {
+                spawnTomato(); // Générer une nouvelle tomate
+            }, 200);
+
+            const targetX = event.pageX;
+            let targetY = event.pageY + 40;
+
+            targetY = window.innerHeight - targetY;
+
+            const distance = Math.hypot(targetX - window.innerWidth / 2, targetY);
+            const duration = Math.min(400, Math.max(300, distance * 1.5)); // Réduire la durée pour une animation plus rapide
+
+            // Animation de la tomate sans easing
+            const animation = tomato.animate([
+                { bottom: '0', left: '50%' },
+                { bottom: `${targetY}px`, left: `${targetX}px` }
+            ], {
+                duration: duration,
+                easing: 'linear', // Pas de easing
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => {
+                tomato.style.bottom = `${targetY}px`;
+                tomato.style.left = `${targetX}px`;
+                tomato.style.transform = 'translate(-50%, 0) scale(1.3)';
+
+                // Générer un index aléatoire différent du précédent
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * 4) + 1;
+                } while (randomIndex === lastRandomIndex);
+                lastRandomIndex = randomIndex;
+
+                tomato.src = `/tomatoes-title/tomato-${randomIndex}.png`;
+            };
+        }, { once: true });
+    }
+
+    spawnTomato();
+}
