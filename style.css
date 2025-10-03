@@ -13,6 +13,15 @@ body {
     height: 100vh;
 }
 
+/* if body has class "timer-finished" */
+body.timer-finished, 
+body.timer-finished .controls button, 
+body.timer-finished .task-input, 
+body.timer-finished .remove-validation, 
+body.timer-finished #session-name {
+    cursor: none;
+}
+
 .pomodoro-container {
     /* background: #fff; */
     padding: 20px;
@@ -158,9 +167,9 @@ h1 img:nth-of-type(4) {
 }
 
 .controls button.secondary {
-    background: #bdc3c700;
+    background: transparent;
     color: #bdc3c7;
-    border: none;
+
     border: 3px solid #bdc3c7;
     padding: 10px 20px;
     margin: 5px 0;

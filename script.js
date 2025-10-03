@@ -355,6 +355,9 @@ function handleSessionEnd() {
     // Rendre les tâches cliquables pour validation
     makeTasksValidatable();
 
+    // ajouter une classe "timer-finished" au body
+    document.body.classList.add('timer-finished');
+
     // Lancer le mini-jeu
     startTomatoGame();
 
@@ -447,6 +450,9 @@ function resetTimer() {
 function handleSessionComplete() {
     // Vérifier si le champ de nom de session est vide, sinon générer un nom par défaut
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
+
+    // remove classe "timer-finished" au body
+    document.body.classList.remove('timer-finished');
 
     // Récupérer les tâches (avec validated)
     const allTasks = saveTasks();
@@ -788,7 +794,6 @@ function makeTasksValidatable() {
         //readonly pour éviter modification
         input.setAttribute('readonly', 'true');
         input.classList.add('clickable');
-        input.style.cursor = 'pointer';
 
         if (input.__validListenerAttached) return;
 
