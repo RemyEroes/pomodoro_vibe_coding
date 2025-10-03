@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomodoro App</title>
+    <title>P🍅m🍅d🍅r🍅</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="pomodoro-container">
-        <h1>Pomodoro Timer</h1>
+        <h1>
+            <span>P</span>
+            <img src="/tomatoes-title/tomato-1.png" alt="Tomato 1">
+            <span>M</span>
+            <img src="/tomatoes-title/tomato-2.png" alt="Tomato 2">
+            <span>D</span>
+            <img src="/tomatoes-title/tomato-3.png" alt="Tomato 3">
+            <span>R</span>
+            <img src="/tomatoes-title/tomato-4.png" alt="Tomato 4">
+        </h1>
         <input type="text" class="timer-display" id="timer-input" value="25:00" maxlength="5">
         <div class="controls">
             <button id="start">Start</button>
@@ -21,5 +30,13 @@
         <ul id="tasks-list"></ul>
     </div>
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const images = document.querySelectorAll('h1 img');
+            images.forEach((img, index) => {
+                img.style.setProperty('--animation-delay', `${index * 0.2}s`);
+            });
+        });
+    </script>
 </body>
 </html>
