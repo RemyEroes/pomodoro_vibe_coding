@@ -124,7 +124,7 @@ function generateSessionName() {
     return now.toLocaleString('fr-FR', options).replace(',', ' |');
 }
 
-// Fonction pour sauvegarder l'état de la session dans le localStorage
+// Ajouter la date actuelle à la session sauvegardée
 function saveSession() {
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
     const session = {
@@ -133,6 +133,7 @@ function saveSession() {
         isRunning,
         isPaused,
         isFinished,
+        date: new Date().toISOString(), // Ajouter la date actuelle
         tasks: saveTasks(),
     };
     localStorage.setItem('pomodoroSession', JSON.stringify(session));
@@ -365,6 +366,7 @@ function handleSessionEnd() {
     notifyUser();
 }
 
+// Fonction pour démarrer le minuteur
 function startTimer() {
     if (!isRunning) {
         // Vérifier si aucune tâche n'est définie
@@ -410,6 +412,7 @@ function startTimer() {
     }
 }
 
+// Fonction pour mettre en pause le minuteur
 function pauseTimer() {
     clearInterval(timer);
     isRunning = false;
@@ -421,7 +424,7 @@ function pauseTimer() {
     updateInputState();
 }
 
-
+// Fonction pour réinitialiser le minuteur
 function resetTimer() {
     clearInterval(timer);
     isRunning = false;
@@ -448,18 +451,14 @@ function resetTimer() {
 
 // Modification de handleSessionComplete pour charger les tâches incomplètes après avoir complété une session
 function handleSessionComplete() {
-    // Vérifier si le champ de nom de session est vide, sinon générer un nom par défaut
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
 
-    // remove classe "timer-finished" au body
     document.body.classList.remove('timer-finished');
 
-    // Récupérer les tâches (avec validated)
     const allTasks = saveTasks();
     const validatedTasks = allTasks.filter(t => t.validated);
     const notValidated = allTasks.filter(t => !t.validated);
 
-    // Créer la session complétée avec les tâches validées
     const completedSession = {
         name: sessionName,
         timeLeft: 0,
@@ -467,18 +466,17 @@ function handleSessionComplete() {
         isPaused: false,
         isFinished: false,
         isCompleted: true,
+        date: new Date().toISOString(), // Ajouter la date actuelle
         tasks: validatedTasks
     };
     saveCompletedSession(completedSession);
 
-    // Sauvegarder les tâches non validées séparément
     if (notValidated.length) {
         const existing = JSON.parse(localStorage.getItem('incompleteTasks')) || [];
         existing.push({ sessionName, date: new Date().toISOString(), tasks: notValidated });
         localStorage.setItem('incompleteTasks', JSON.stringify(existing));
     }
 
-    // Nettoyage localStorage et UI
     localStorage.removeItem('pomodoroSession');
     timeLeft = 25 * 60;
     isRunning = false;
@@ -491,7 +489,6 @@ function handleSessionComplete() {
     updateButtonVisibility();
     updateInputState();
 
-    // Charger les tâches incomplètes immédiatement
     const incompleteTasks = loadIncompleteTasks();
     if (incompleteTasks.length > 0) {
         loadTasks(incompleteTasks);
@@ -855,3 +852,75 @@ function removeAllTomatoes() {
         }, delay);
     });
 }
+
+// Fonction pour charger les tâches complétées depuis le localStorage
+function loadCompletedTasks() {
+    const completedTasks = JSON.parse(localStorage.getItem('completedSessions')) || [];
+    const completedTasksList = document.getElementById('completed-tasks-list');
+    completedTasksList.innerHTML = '';
+
+    const today = new Date();
+    const formatDate = (date) => {
+        const options = { day: 'numeric', month: 'short' };
+        return date.toLocaleDateString('fr-FR', options);
+    };
+
+    const groupByDate = completedTasks.reduce((acc, task) => {
+        const taskDate = new Date(task.date);
+        const diffDays = Math.floor((today - taskDate) / (1000 * 60 * 60 * 24));
+        let label;
+
+        if (diffDays === 0) label = "Aujourd'hui";
+        else if (diffDays === 1) label = "Hier";
+        else if (diffDays === 2) label = "Avant-hier";
+        else label = formatDate(taskDate);
+
+        if (!acc[label]) acc[label] = [];
+        acc[label].push(task);
+        return acc;
+    }, {});
+
+    Object.keys(groupByDate).forEach((dateLabel) => {
+        const dateHeader = document.createElement('li');
+        dateHeader.classList.add('date-header');
+        dateHeader.textContent = dateLabel;
+        completedTasksList.appendChild(dateHeader);
+
+        groupByDate[dateLabel].forEach((task) => {
+            if (!task.tasks.length === 0) return;
+            task.tasks.forEach(t => {
+                const taskItem = document.createElement('li');
+                taskItem.textContent = t.name;
+                taskItem.classList.add('task-item');
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-completed-task');
+                deleteButton.innerHTML = `<img src="assets/delete.svg" alt="Supprimer">`;
+                deleteButton.addEventListener('click', () => deleteCompletedTask(t));
+
+                taskItem.appendChild(deleteButton);
+                completedTasksList.appendChild(taskItem);
+            });
+        });
+    });
+}
+
+// Fonction pour supprimer une tâche complétée
+function deleteCompletedTask(taskToDelete) {
+    let completedTasks = JSON.parse(localStorage.getItem('completedSessions')) || [];
+    console.log('Tâche à supprimer :', taskToDelete);
+    console.log('Tâches avant suppression :', completedTasks);
+
+    completedTasks = completedTasks.map(session => {
+        return {
+            ...session,
+            tasks: session.tasks.filter(task => task.name !== taskToDelete.name)
+        };
+    }).filter(session => session.tasks.length > 0); // Supprimer les sessions sans tâches restantes
+
+    localStorage.setItem('completedSessions', JSON.stringify(completedTasks));
+    loadCompletedTasks();
+}
+
+// Charger les tâches complétées au rechargement de la page
+window.addEventListener('load', loadCompletedTasks);
