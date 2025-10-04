@@ -147,12 +147,12 @@ function generateSessionName() {
 // Fonction pour basculer entre work et break mode
 function toggleMode() {
     if (isRunning || isPaused) return; // Ne pas permettre de changer le mode pendant une session active
-    
+
     isBreakMode = !isBreakMode;
-    
+
     const oldTime = timeLeft;
     const newTime = isBreakMode ? 5 * 60 : 25 * 60;
-    
+
     if (isBreakMode) {
         applyBreakModeStyle();
         modeSwitch.textContent = '💼 Work';
@@ -164,7 +164,7 @@ function toggleMode() {
         // Afficher les tâches en mode work
         document.querySelector('.tasks-container').style.display = 'block';
     }
-    
+
     // Animer la transition du timer
     animateTimerTransition(oldTime, newTime);
     saveSession();
@@ -178,11 +178,11 @@ function applyBreakModeStyle() {
         if (btn.classList.contains('primary')) {
             btn.style.background = '#8B4513';
         }
-        if(btn.getAttribute('id') === 'pause') {
+        if (btn.getAttribute('id') === 'pause') {
             btn.style.background = '#8B4513';
         }
     });
-    
+
     const timerDisplay = document.getElementsByClassName('timer-display')[0];
     // timerDisplay.style.borderColor = '#8B4513';
 
@@ -208,6 +208,9 @@ function removeBreakModeStyle() {
     timerInput.style.borderColor = 'transparent';
     document.querySelectorAll('.controls button').forEach(btn => {
         if (btn.classList.contains('primary')) {
+            btn.style.background = '#D42113';
+        }
+        if (btn.getAttribute('id') === 'pause') {
             btn.style.background = '#D42113';
         }
     });
@@ -263,6 +266,7 @@ function saveCompletedSession(session) {
     const completedSessions = JSON.parse(localStorage.getItem('completedSessions')) || [];
     completedSessions.push(session);
     localStorage.setItem('completedSessions', JSON.stringify(completedSessions));
+
 }
 
 // Fonction pour charger une session depuis le localStorage
@@ -284,8 +288,15 @@ function loadSession() {
         isFinished = timeLeft === 0; // Définir isFinished à true si le temps est écoulé
         isBreakMode = session.isBreakMode || false; // Charger le mode break
 
-        sessionNameInput.value = session.name || ''; // Charger le nom de la session
-        
+        // Lors du chargement de la session, gérer l'input sessionNameInput en mode break
+        if (isBreakMode) {
+            sessionNameInput.value = 'Break';
+            sessionNameInput.setAttribute('disabled', 'true');
+        } else {
+            sessionNameInput.value = session.name || ''; // Charger le nom de la session
+            sessionNameInput.removeAttribute('disabled');
+        }
+
         // Appliquer le style du mode break si nécessaire
         if (isBreakMode) {
             applyBreakModeStyle();
@@ -293,7 +304,7 @@ function loadSession() {
             sessionNameInput.value = 'Break';
             sessionNameInput.setAttribute('disabled', 'true');
 
-            
+
         }
 
         if (session.tasks && session.tasks.length > 0) {
@@ -364,10 +375,13 @@ function loadSession() {
     // Si on est en mode break mais que le temps n'est pas défini, le définir à 5 minutes
     if (isBreakMode && timeLeft !== 5 * 60) {
         timeLeft = 5 * 60;
+         sessionNameInput.value = 'Break';
+    sessionNameInput.setAttribute('disabled', 'true');
     }
     if (!isBreakMode && timeLeft !== 25 * 60) {
         timeLeft = 25 * 60;
     }
+
 
 }
 
@@ -518,23 +532,23 @@ function startTimer() {
         // Vérifier si aucune tâche n'est définie (seulement en mode work)
         const taskInputs = document.querySelectorAll('.task-input');
         const noTasksMessage = document.getElementById('no-tasks-message');
-        
+
         // En mode work, vérifier les tâches
         if (!isBreakMode) {
 
-        if (taskInputs.length === 0) {
-            if (!noTasksMessage) {
-                const message = document.createElement('h5');
-                message.id = 'no-tasks-message';
-                message.textContent = 'No tasks defined';
-                document.getElementById('tasks-list').appendChild(message);
+            if (taskInputs.length === 0) {
+                if (!noTasksMessage) {
+                    const message = document.createElement('h5');
+                    message.id = 'no-tasks-message';
+                    message.textContent = 'No tasks defined';
+                    document.getElementById('tasks-list').appendChild(message);
+                }
+            } else if (noTasksMessage) {
+                noTasksMessage.remove(); // Supprimer le message si des tâches existent
             }
-        } else if (noTasksMessage) {
-            noTasksMessage.remove(); // Supprimer le message si des tâches existent
-        }
 
-        // Supprimer les tâches incomplètes du localStorage
-        localStorage.removeItem('incompleteTasks');
+            // Supprimer les tâches incomplètes du localStorage
+            localStorage.removeItem('incompleteTasks');
         }
 
         isRunning = true;
@@ -580,7 +594,7 @@ function resetTimer() {
     isRunning = false;
     isPaused = false;
     isFinished = false;
-    
+
     // Si on est en mode break, rester en mode break et réinitialiser au temps break
     if (isBreakMode) {
         timeLeft = 5 * 60; // 5 minutes pour le break
@@ -589,7 +603,7 @@ function resetTimer() {
         timeLeft = 25 * 60; // 25 minutes pour le work
         sessionNameInput.value = ''; // Effacer le nom de la session
     }
-    
+
     localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
 
@@ -620,7 +634,7 @@ function handleSessionComplete() {
         updateDisplay();
         updateButtonVisibility();
         updateInputState();
-        
+
         // Charger les tâches incomplètes
         const incompleteTasks = loadIncompleteTasks();
         if (incompleteTasks.length > 0) {
@@ -658,10 +672,11 @@ function handleSessionComplete() {
     }
 
     localStorage.removeItem('pomodoroSession');
-    
+
     // Activer le mode break après la complétion
     activateBreakMode();
-    
+
+
     isRunning = false;
     isPaused = false;
     isFinished = false;
@@ -679,35 +694,38 @@ function handleSessionComplete() {
 
     // load completed tasks in the list
     loadCompletedTasks()
+
+    sessionNameInput.value = 'Break';
+    sessionNameInput.setAttribute('disabled', 'true');
 }
 
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('Service Worker enregistré ✅'))
-    .catch(err => console.error('Erreur SW:', err));
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker enregistré ✅'))
+        .catch(err => console.error('Erreur SW:', err));
 }
 
 function notifyUser() {
-  if (Notification.permission === 'granted') {
-    navigator.serviceWorker.ready.then(registration => {
-      if (isBreakMode) {
-        // Notification pour la fin de la pause
-        registration.showNotification('☕ Pause terminée !', {
-          body: 'C\'est l\'heure de reprendre le travail !',
+    if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(registration => {
+            if (isBreakMode) {
+                // Notification pour la fin de la pause
+                registration.showNotification('☕ Pause terminée !', {
+                    body: 'C\'est l\'heure de reprendre le travail !',
+                });
+            } else {
+                // Notification pour la fin du pomodoro
+                registration.showNotification('🍅 Pomodoro terminé !', {
+                    body: 'Prenez une pause bien méritée !',
+                });
+            }
         });
-      } else {
-        // Notification pour la fin du pomodoro
-        registration.showNotification('🍅 Pomodoro terminé !', {
-          body: 'Prenez une pause bien méritée !',
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') notifyUser();
         });
-      }
-    });
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') notifyUser();
-    });
-  }
+    }
 }
 
 // Gestion des événements
@@ -799,7 +817,7 @@ function animateTimerOnLoad() {
 
     // Si une session est déjà en cours, ajouter 2s au temps (animation)
     if (isRunning || isPaused) {
-        timeLeft = Math.max(0, timeLeft + 2 );
+        timeLeft = Math.max(0, timeLeft + 2);
     }
 
     requestAnimationFrame(animate);
@@ -818,7 +836,7 @@ function animateTimerTransition(oldTime, newTime) {
         const easeInOutQuad = progress < 0.5
             ? 2 * progress * progress
             : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-        
+
         const currentTime = Math.floor(oldTime + (newTime - oldTime) * easeInOutQuad);
 
         timerInput.value = formatTime(currentTime);
@@ -842,7 +860,6 @@ updateInputState();
 // Charger la session au rechargement de la page
 window.addEventListener('load', () => {
     loadSession();
-    
     // Toujours lancer l'animation au chargement
     animateTimerOnLoad();
 });
