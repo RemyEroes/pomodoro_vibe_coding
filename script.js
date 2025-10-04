@@ -182,6 +182,21 @@ function applyBreakModeStyle() {
             btn.style.background = '#8B4513';
         }
     });
+    
+    const timerDisplay = document.getElementsByClassName('timer-display')[0];
+    // timerDisplay.style.borderColor = '#8B4513';
+
+    // Ajouter un effet :hover via JavaScript
+    timerDisplay.addEventListener('mouseenter', () => {
+        timerDisplay.style.borderColor = '#8B4513'; // Couleur plus claire au survol
+        timerDisplay.style.background = '#8b451317';
+    });
+
+    timerDisplay.addEventListener('mouseleave', () => {
+        timerDisplay.style.borderColor = 'transparent'; // Revenir à la couleur d'origine
+        timerDisplay.style.background = 'transparent';
+    });
+
     modeSwitch.textContent = '💼 Work';
     sessionNameInput.value = 'Break';
     sessionNameInput.setAttribute('disabled', 'true');
@@ -196,6 +211,21 @@ function removeBreakModeStyle() {
             btn.style.background = '#D42113';
         }
     });
+
+    const timerDisplay = document.getElementsByClassName('timer-display')[0];
+    // timerDisplay.style.borderColor = '#D42113';
+
+    // Ajouter un effet :hover via JavaScript
+    timerDisplay.addEventListener('mouseenter', () => {
+        timerDisplay.style.borderColor = '#D42113'; // Couleur plus claire au survol
+        timerDisplay.style.background = '#D4211317';
+    });
+
+    timerDisplay.addEventListener('mouseleave', () => {
+        timerDisplay.style.borderColor = 'transparent'; // Revenir à la couleur d'origine
+        timerDisplay.style.background = 'transparent';
+    });
+
     modeSwitch.textContent = '☕ Break';
     sessionNameInput.value = '';
     sessionNameInput.removeAttribute('disabled');
