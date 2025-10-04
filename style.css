@@ -21,6 +21,9 @@ body.timer-finished .remove-validation,
 body.timer-finished #session-name {
     cursor: none;
 }
+body.timer-finished .task-item{
+    pointer-events: none;
+}
 
 .pomodoro-container {
     /* background: #fff; */
@@ -343,6 +346,88 @@ h1 img:nth-of-type(4) {
 ;
     align-items: center;
     justify-content: center;
+}
+
+.completed-tasks-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    border: none;
+    padding: 10px;
+    width: 300px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: 'Dela Gothic One', cursive;
+}
+
+.completed-tasks-container h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #333;
+    text-transform: uppercase;
+}
+
+#completed-tasks-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#completed-tasks-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+    color: #555;
+    position: relative;
+}
+
+#completed-tasks-list li.date-header {
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+    margin-top: 10px;
+}
+
+#completed-tasks-list li.task-item {
+    font-weight: bold;
+    color: #555555d2;
+    border-bottom: 0.5px solid #ddd;
+    margin-left: 30px;
+    cursor: pointer;
+}
+
+.delete-completed-task {
+    display: none;
+    background: #D42113;
+    color: #fff;
+    border: none;
+    padding: 2px 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    align-items: center;
+    justify-content: center;
+}
+
+#completed-tasks-list li:hover .delete-completed-task {
+    display: flex;
+}
+
+
+#completed-tasks-list li:hover .delete-completed-task:hover {
+    background: #a91a0f;
+}
+
+
+.delete-completed-task img {
+    width: 16px;
+    height: 16px;
 }
 
 @keyframes tomato-throw-1 {
