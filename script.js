@@ -710,7 +710,7 @@ function startTomatoGame() {
         tomato.animate([
             { bottom: '-100px', transform: `translate(-50%, 0) scale(0.8) rotate(${randomRotation}deg)`, opacity: 0 },
             { bottom: '20px', transform: `translate(-50%, 0) scale(1.2) rotate(${randomRotation}deg)`, opacity: 1 },
-            { bottom: '0', transform: `translate(-50%, 0) scale(1) rotate(${randomRotation}deg)` }
+            { bottom: '0', transform: `translate(-50%, 0) scale(1.2) rotate(${randomRotation}deg)` }
         ], {
             duration: 800,
             easing: 'ease-out',
@@ -782,6 +782,8 @@ function startTomatoGame() {
                 tomato.src = `/tomatoes-title/tomato-${randomIndex}.png`;
             };
         }, { once: true });
+
+        
     }
 
     spawnTomato();
