@@ -670,7 +670,7 @@ function startTomatoGame() {
 
     // Ajouter le curseur personnalisé
     const crosshair = document.createElement('img');
-    crosshair.src = '/assets/Crosshair.svg';
+    crosshair.src = '/assets/Crosshair2.svg';
     crosshair.alt = 'Crosshair';
     crosshair.style.position = 'absolute';
     crosshair.style.width = '30px';
