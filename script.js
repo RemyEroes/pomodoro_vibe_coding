@@ -687,8 +687,16 @@ function startTomatoGame() {
     });
 
     let lastRandomIndex = -1; // Stocker le dernier index aléatoire
+    let isMouseDown = false; // Suivre l'état du bouton de la souris
+    let centerTomato = null; // Référence à la tomate du centre
 
-    function spawnTomato() {
+    function spawnTomato(event, targetX, targetY) {
+        let toThrow = true;
+        if (typeof targetX === 'undefined' || typeof targetY === 'undefined') {
+            console.log('spawnTomato called without target coordinates');
+            toThrow = false;
+        }
+
         const tomato = document.createElement('img');
         tomato.src = '/tomatoes-title/tomato-clear.png';
         tomato.alt = 'Tomato';
@@ -717,76 +725,116 @@ function startTomatoGame() {
             fill: 'forwards'
         });
 
-        // Gérer le clic pour lancer la tomate
-        document.addEventListener('click', (event) => {
-
-            if (event.target.classList.contains('task-input')) {
-                const taskId = event.target.dataset.taskId;
-                tomato.dataset.taskId = taskId; // Associer la tomate à la tâche
+        if (!toThrow) {
+            // Si c'est la tomate du centre, la stocker
+            if (centerTomato) {
+                centerTomato.remove(); // Supprimer l'ancienne tomate du centre
             }
+            centerTomato = tomato;
+            return;
+        }
 
-            if (event.target.getAttribute('id') === 'complete') {
-                // Ne pas lancer la tomate si on clique sur le bouton "Complete"
-                removeAllTomatoes();
-                tomato.remove();
-                crosshair.remove();
+        if (event.target.classList.contains('task-input')) {
+            const taskId = event.target.dataset.taskId;
+            tomato.dataset.taskId = taskId; // Associer la tomate à la tâche
+        }
+
+        if (event.target.getAttribute('id') === 'complete') {
+            // Ne pas lancer la tomate si on clique sur le bouton "Complete"
+            removeAllTomatoes();
+            tomato.remove();
+            crosshair.remove();
+            return;
+        }
+
+        // animation de click du crosshair
+        crosshair.animate([
+            { transform: 'translate(-50%, -50%) scale(1)' },
+            { transform: 'translate(-50%, -50%) scale(0.7)' },
+            { transform: 'translate(-50%, -50%) scale(1)' }
+        ], {
+            duration: 200,
+            easing: 'ease-out',
+            fill: 'forwards'
+        });
+
+        // Supprimer la tomate du centre avant d'en générer une nouvelle
+        if (centerTomato) {
+            centerTomato.remove();
+            centerTomato = null;
+        }
+
+        setTimeout(() => {
+            spawnTomato(); // Générer une nouvelle tomate
+        }, 100);
+
+        const distance = Math.hypot(targetX - window.innerWidth / 2, targetY);
+        const duration = Math.min(400, Math.max(300, distance * 1.5)); // Réduire la durée pour une animation plus rapide
+
+        // Animation de la tomate sans easing
+        const animation = tomato.animate([
+            { bottom: '0', left: '50%', opacity: 1 },
+            { bottom: `${targetY}px`, left: `${targetX}px` }
+        ], {
+            duration: duration,
+            easing: 'cubic-bezier(0.11, 0, 0.5, 0)', // Pas de easing
+            fill: 'forwards'
+        });
+
+        animation.onfinish = () => {
+            tomato.style.bottom = `${targetY}px`;
+            tomato.style.left = `${targetX}px`;
+            tomato.style.transform = 'translate(-50%, 0) scale(1.3)';
+
+            // Générer un index aléatoire différent du précédent
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * 4) + 1;
+            } while (randomIndex === lastRandomIndex);
+            lastRandomIndex = randomIndex;
+
+            tomato.src = `/tomatoes-title/tomato-${randomIndex}.png`;
+        };
+    }
+
+    let pageX = 0;
+    let pageY = 0;
+
+    function handleMouseDown(event) {
+        isMouseDown = true;
+
+        let targetX = pageX;
+        let targetY = pageY + 40;
+        targetY = window.innerHeight - targetY;
+        spawnTomato(event, targetX, targetY);
+
+        const spawnInterval = setInterval(() => {
+            if (!isMouseDown) {
+                clearInterval(spawnInterval);
                 return;
             }
 
-            // animation de click du crosshair
-            crosshair.animate([
-                { transform: 'translate(-50%, -50%) scale(1)' },
-                { transform: 'translate(-50%, -50%) scale(0.7)' },
-                { transform: 'translate(-50%, -50%) scale(1)' }
-            ], {
-                duration: 200,
-                easing: 'ease-out',
-                fill: 'forwards'
-            });
+            let targetXNew = pageX;
+            let targetYNew = pageY + 40;
+            targetYNew = window.innerHeight - targetYNew;
 
-
-            setTimeout(() => {
-                spawnTomato(); // Générer une nouvelle tomate
-            }, 200);
-
-            const targetX = event.pageX;
-            let targetY = event.pageY + 40;
-
-            targetY = window.innerHeight - targetY;
-
-            const distance = Math.hypot(targetX - window.innerWidth / 2, targetY);
-            const duration = Math.min(400, Math.max(300, distance * 1.5)); // Réduire la durée pour une animation plus rapide
-
-            // Animation de la tomate sans easing
-            const animation = tomato.animate([
-                { bottom: '0', left: '50%' },
-                { bottom: `${targetY}px`, left: `${targetX}px` }
-            ], {
-                duration: duration,
-                easing: 'cubic-bezier(0.11, 0, 0.5, 0)', // Pas de easing
-                fill: 'forwards'
-            });
-
-            animation.onfinish = () => {
-                tomato.style.bottom = `${targetY}px`;
-                tomato.style.left = `${targetX}px`;
-                tomato.style.transform = 'translate(-50%, 0) scale(1.3)';
-
-                // Générer un index aléatoire différent du précédent
-                let randomIndex;
-                do {
-                    randomIndex = Math.floor(Math.random() * 4) + 1;
-                } while (randomIndex === lastRandomIndex);
-                lastRandomIndex = randomIndex;
-
-                tomato.src = `/tomatoes-title/tomato-${randomIndex}.png`;
-            };
-        }, { once: true });
-
-        
+            spawnTomato(event, targetXNew, targetYNew);
+        }, 300); // Lancer une tomate toutes les 300ms
     }
 
-    spawnTomato();
+    document.addEventListener('mousemove', (event) => {
+        pageX = event.pageX;
+        pageY = event.pageY;
+    });
+
+    function handleMouseUp() {
+        isMouseDown = false;
+    }
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    spawnTomato(); // Lancer une tomate au centre au début
 }
 
 function removeTomatoesByTaskId(taskId) {
