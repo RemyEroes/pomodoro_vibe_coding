@@ -1235,9 +1235,9 @@ function loadCompletedTasks() {
         const diffDays = Math.floor((today - taskDate) / (1000 * 60 * 60 * 24));
         let label;
 
-        if (diffDays === 0) label = "Aujourd'hui";
-        else if (diffDays === 1) label = "Hier";
-        else if (diffDays === 2) label = "Avant-hier";
+        if (diffDays === 0) label = "Today";
+        else if (diffDays === 1) label = "Yesterday";
+        else if (diffDays === 2) label = "Day before yesterday";
         else label = formatDate(taskDate);
 
         if (!acc[label]) acc[label] = [];
