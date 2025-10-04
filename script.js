@@ -791,7 +791,7 @@ timerInput.addEventListener('keydown', (event) => {
 
 // Fonction pour animer le compteur de 00:00 au temps par défaut
 function animateTimerOnLoad() {
-    const targetTime = timeLeft;
+    let targetTime = timeLeft;
     const duration = 2000; // Durée de l'animation en ms
     const startTime = Date.now();
 
@@ -818,6 +818,11 @@ function animateTimerOnLoad() {
     // Si une session est déjà en cours, ajouter 2s au temps (animation)
     if (isRunning || isPaused) {
         timeLeft = Math.max(0, timeLeft + 2);
+    }
+
+    // if isFinished set to 00:00
+    if (isFinished) {
+        targetTime = 0;
     }
 
     requestAnimationFrame(animate);
