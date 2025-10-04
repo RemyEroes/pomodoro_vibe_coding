@@ -500,20 +500,25 @@ function handleSessionComplete() {
     loadCompletedTasks()
 }
 
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg => console.log('Service Worker enregistré ✅'))
+    .catch(err => console.error('Erreur SW:', err));
+}
+
 function notifyUser() {
-    if (Notification.permission === 'granted') {
-        new Notification('Pomodoro terminé !', {
-            body: 'Prenez une pause bien méritée.',
-        });
-    } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                new Notification('Pomodoro terminé !', {
-                    body: 'Prenez une pause bien méritée.',
-                });
-            }
-        });
-    }
+  if (Notification.permission === 'granted') {
+    navigator.serviceWorker.ready.then(registration => {
+      registration.showNotification('🍅 Pomodoro terminé !', {
+        body: 'Prenez une pause bien méritée !',
+      });
+    });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') notifyUser();
+    });
+  }
 }
 
 // Gestion des événements
@@ -1049,3 +1054,9 @@ function deleteCompletedTask(taskToDelete) {
 window.addEventListener('load', loadCompletedTasks);
 
 
+// au load si on est pas sur localhost on change va sur localhost:55000
+window.addEventListener('load', () => {
+    if (location.hostname !== 'localhost') {
+        location.href = 'http://localhost:5500';
+    }
+});
