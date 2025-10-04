@@ -121,7 +121,7 @@ function updateInputState() {
 // Fonction pour générer un nom de session basé sur la date et l'heure actuelles
 function generateSessionName() {
     const now = new Date();
-    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
     return now.toLocaleString('fr-FR', options).replace(',', ' |');
 }
 
