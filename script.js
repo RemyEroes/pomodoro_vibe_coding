@@ -935,6 +935,8 @@ function loadCompletedTasks() {
         const diffDays = Math.floor((today - taskDate) / (1000 * 60 * 60 * 24));
         let label;
 
+        console.log('Task date:', taskDate, 'Diff days:', diffDays);
+
         if (diffDays === 0) label = "Aujourd'hui";
         else if (diffDays === 1) label = "Hier";
         else if (diffDays === 2) label = "Avant-hier";
@@ -987,3 +989,5 @@ function deleteCompletedTask(taskToDelete) {
 
 // Charger les tâches complétées au rechargement de la page
 window.addEventListener('load', loadCompletedTasks);
+
+
