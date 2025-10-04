@@ -493,6 +493,9 @@ function handleSessionComplete() {
     if (incompleteTasks.length > 0) {
         loadTasks(incompleteTasks);
     }
+
+    // load completed tasks in the list
+    loadCompletedTasks()
 }
 
 function notifyUser() {
