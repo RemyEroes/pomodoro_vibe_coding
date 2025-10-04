@@ -235,11 +235,16 @@ h1 img:nth-of-type(4) {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    transition: none;
 }
 
 .controls button:hover {
     background: #B71C10;
     /* Teinte plus foncée pour le hover */
+}
+.controls button:active {
+    transition: scale 0.3s ease;
+    transform: scale(0.9);
 }
 
 .controls button.primary {
@@ -374,12 +379,18 @@ h1 img:nth-of-type(4) {
     font-size: 16px;
     font-family: 'dela Gothic One', cursive;
     text-transform: uppercase;
+    transition:none;
 }
 
 #add-task:hover {
     background: #D42113;
     color: #fff;
 }
+#add-task:active {
+    transition: scale 0.1s ease;
+    transform: scale(0.95);
+}
+
 
 #add-task.disabled {
     display: none;
@@ -403,6 +414,22 @@ h1 img:nth-of-type(4) {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
+
+    animation: task-list-list-appear 0.3s ease forwards;
+    opacity: 0;
+}
+
+@keyframes task-list-list-appear {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
 }
 
 .task-input {
@@ -449,11 +476,16 @@ h1 img:nth-of-type(4) {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: none;
 }
 
 .delete-task:hover {
     background: #B71C10;
     /* Teinte plus foncée pour le hover */
+}
+.delete-task:active {
+    transition: scale 0.1s ease;
+    transform: scale(0.95);
 }
 
 .delete-task.disabled {
