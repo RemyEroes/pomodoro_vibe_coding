@@ -21,6 +21,9 @@ body.timer-finished .remove-validation,
 body.timer-finished #session-name {
     cursor: none;
 }
+body.timer-finished .task-item{
+    pointer-events: none;
+}
 
 .pomodoro-container {
     /* background: #fff; */
