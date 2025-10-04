@@ -899,6 +899,22 @@ function stopTomatoGame() {
     tomatoGameRunning = false;
 }
 
+// gere le curseur qui sort de la fenetre
+document.addEventListener('mouseleave', () => {
+    if (tomatoGameRunning) {
+        const crosshair = document.querySelector('img[alt="Crosshair"]');
+        if (crosshair) crosshair.style.display = 'none';
+    }
+});
+
+document.addEventListener('mouseenter', () => {
+    if (tomatoGameRunning) {
+        const crosshair = document.querySelector('img[alt="Crosshair"]');
+        if (crosshair) crosshair.style.display = 'block';
+    }
+});
+
+
 function removeTomatoesByTaskId(taskId) {
     const tomatoes = document.querySelectorAll(`img[data-task-id="${taskId}"]`);
     tomatoes.forEach(tomato => tomato.remove());
@@ -1060,3 +1076,4 @@ window.addEventListener('load', () => {
         location.href = 'http://localhost:5500';
     }
 });
+
