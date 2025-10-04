@@ -792,6 +792,12 @@ function startTomatoGame() {
             return;
         }
 
+        // ne pas lancer si on clique sur .remove-validation
+        if (event.target.classList.contains('remove-validation') || event.target.parentElement.classList.contains('remove-validation')) {
+            tomato.remove();
+            return;
+        }
+
         // animation de click du crosshair
         crosshair.animate([
             { transform: 'translate(-50%, -50%) scale(1)' },
