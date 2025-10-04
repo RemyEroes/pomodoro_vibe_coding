@@ -908,8 +908,6 @@ function loadCompletedTasks() {
 // Fonction pour supprimer une tâche complétée
 function deleteCompletedTask(taskToDelete) {
     let completedTasks = JSON.parse(localStorage.getItem('completedSessions')) || [];
-    console.log('Tâche à supprimer :', taskToDelete);
-    console.log('Tâches avant suppression :', completedTasks);
 
     completedTasks = completedTasks.map(session => {
         return {
