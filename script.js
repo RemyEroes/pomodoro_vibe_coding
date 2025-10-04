@@ -24,6 +24,7 @@ sessionNameInput.id = 'session-name';
 sessionNameInput.type = 'text';
 sessionNameInput.placeholder = 'Nom de la session';
 sessionNameInput.classList.add('session-name-input');
+sessionNameInput.autocomplete = 'off'; // Désactiver le remplissage automatique
 document.querySelector('.pomodoro-container').insertBefore(sessionNameInput, document.querySelector('.timer-display'));
 
 // Fonction pour formater le temps en MM:SS
@@ -358,6 +359,7 @@ function handleSessionEnd() {
     document.body.classList.add('timer-finished');
 
     // Lancer le mini-jeu
+    tomatoGameRunning = true;
     startTomatoGame();
 
     // Afficher un message ou notifier l'utilisateur
@@ -705,6 +707,7 @@ startButton.addEventListener('click', () => {
 
 // Mini-jeu des tomates
 function startTomatoGame() {
+
     const body = document.body;
 
     // Ajouter le curseur personnalisé
@@ -730,6 +733,8 @@ function startTomatoGame() {
     let centerTomato = null; // Référence à la tomate du centre
 
     function spawnTomato(event, targetX, targetY) {
+        if (!tomatoGameRunning) return;
+
         let toThrow = true;
         if (typeof targetX === 'undefined' || typeof targetY === 'undefined') {
             console.log('spawnTomato called without target coordinates');
@@ -783,6 +788,7 @@ function startTomatoGame() {
             removeAllTomatoes();
             tomato.remove();
             crosshair.remove();
+            stopTomatoGame();
             return;
         }
 
@@ -874,6 +880,12 @@ function startTomatoGame() {
     document.addEventListener('mouseup', handleMouseUp);
 
     spawnTomato(); // Lancer une tomate au centre au début
+}
+
+let tomatoGameRunning = false;
+
+function stopTomatoGame() {
+    tomatoGameRunning = false;
 }
 
 function removeTomatoesByTaskId(taskId) {
