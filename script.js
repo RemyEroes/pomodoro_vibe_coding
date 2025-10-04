@@ -574,13 +574,52 @@ timerInput.addEventListener('keydown', (event) => {
     }
 });
 
+// Fonction pour animer le compteur de 00:00 au temps par défaut
+function animateTimerOnLoad() {
+    const targetTime = timeLeft;
+    const duration = 2000; // Durée de l'animation en ms
+    const startTime = Date.now();
+
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Utiliser une courbe d'easing pour un effet plus fluide
+        const easeOutQuad = progress * (2 - progress);
+        const currentTime = Math.floor(targetTime * easeOutQuad);
+
+        timerInput.value = formatTime(currentTime);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            timerInput.value = formatTime(targetTime);
+        }
+    }
+
+    // Démarrer avec 00:00
+    timerInput.value = '00:00';
+
+    // Si une session est déjà en cours, ajouter 2s au temps (animation)
+    if (isRunning || isPaused) {
+        timeLeft = Math.max(0, timeLeft + 2 );
+    }
+
+    requestAnimationFrame(animate);
+}
+
 // Initialiser l'affichage et les boutons
 updateDisplay();
 updateButtonVisibility();
 updateInputState();
 
 // Charger la session au rechargement de la page
-window.addEventListener('load', loadSession);
+window.addEventListener('load', () => {
+    loadSession();
+    
+    // Toujours lancer l'animation au chargement
+    animateTimerOnLoad();
+});
 
 // Ajouter un gestionnaire d'événement pour le bouton "Complete"
 completeButton.addEventListener('click', handleSessionComplete);

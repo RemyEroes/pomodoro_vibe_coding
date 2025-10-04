@@ -160,8 +160,28 @@ h1 img:nth-of-type(4) {
     font-weight: normal;
     font-style: italic;
     font-display: swap;
-    transition: all 0.3s ease;
+    transition: hover 0.3s ease;
     cursor: text;
+
+    animation: timer-display-appear 2s ease forwards;
+    opacity: 0;
+}
+
+@keyframes timer-display-appear {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    40% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    
 }
 
 .timer-display:hover {
