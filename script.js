@@ -975,6 +975,9 @@ function loadCompletedTasks() {
     const completedTasksList = document.getElementById('completed-tasks-list');
     completedTasksList.innerHTML = '';
 
+    // Trier les tâches complétées des plus récentes aux plus anciennes
+    completedTasks.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     const today = new Date();
     const formatDate = (date) => {
         const options = { day: 'numeric', month: 'short' };
@@ -985,8 +988,6 @@ function loadCompletedTasks() {
         const taskDate = new Date(task.date);
         const diffDays = Math.floor((today - taskDate) / (1000 * 60 * 60 * 24));
         let label;
-
-        console.log('Task date:', taskDate, 'Diff days:', diffDays);
 
         if (diffDays === 0) label = "Aujourd'hui";
         else if (diffDays === 1) label = "Hier";
