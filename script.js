@@ -733,6 +733,18 @@ function startTomatoGame() {
                 return;
             }
 
+            // animation de click du crosshair
+            crosshair.animate([
+                { transform: 'translate(-50%, -50%) scale(1)' },
+                { transform: 'translate(-50%, -50%) scale(0.7)' },
+                { transform: 'translate(-50%, -50%) scale(1)' }
+            ], {
+                duration: 200,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+
             setTimeout(() => {
                 spawnTomato(); // Générer une nouvelle tomate
             }, 200);
