@@ -37,7 +37,7 @@ function formatTime(totalSeconds) {
 function parseTimeFromInput() {
     const value = timerInput.value.replace(/[^\d:]/g, ''); // Ne garder que les chiffres et ':'
     const parts = value.split(':');
-    
+
     if (parts.length === 2) {
         const minutes = Math.max(0, Math.min(59, parseInt(parts[0]) || 0));
         const seconds = Math.max(0, Math.min(59, parseInt(parts[1]) || 0));
@@ -47,21 +47,21 @@ function parseTimeFromInput() {
         const minutes = Math.max(0, Math.min(99, parseInt(parts[0]) || 0));
         return minutes * 60;
     }
-    
+
     return 25 * 60; // Valeur par défaut
 }
 
 // Fonction pour formater automatiquement la saisie
 function formatInput(event) {
     let value = event.target.value.replace(/[^\d]/g, ''); // Ne garder que les chiffres
-    
+
     if (value.length >= 3) {
         // Insérer automatiquement les ':'
         const minutes = value.substring(0, value.length - 2);
         const seconds = value.substring(value.length - 2);
         value = `${minutes}:${seconds}`;
     }
-    
+
     event.target.value = value;
 }
 
@@ -237,10 +237,8 @@ function loadIncompleteTasks() {
     const incompleteTasks = JSON.parse(localStorage.getItem('incompleteTasks')) || [];
     const tasks = [];
 
-    incompleteTasks.forEach(session => {
-        session.tasks.forEach(task => {
-            tasks.push({ name: task.name, validated: false });
-        });
+    incompleteTasks.forEach(task => {
+        tasks.push({ name: task, validated: false });
     });
 
     return tasks;
@@ -271,7 +269,7 @@ function saveTasks() {
     const tasks = [];
     const taskInputs = document.querySelectorAll('.task-input');
     taskInputs.forEach(input => {
-        tasks.push({ 
+        tasks.push({
             name: input.value.trim(), // Supprimer les espaces inutiles
             validated: input.dataset && input.dataset.validated === 'true' // Vérifier la présence de l'attribut
         });
@@ -289,7 +287,7 @@ function loadTasks(tasks) {
         taskInput.type = 'text';
         taskInput.value = task.name;
         taskInput.classList.add('task-input');
-        
+
         // Restaurer l'état validated si présent
         if (task.validated) {
             taskInput.dataset.validated = 'true';
@@ -473,7 +471,9 @@ function handleSessionComplete() {
 
     if (notValidated.length) {
         const existing = JSON.parse(localStorage.getItem('incompleteTasks')) || [];
-        existing.push({ sessionName, date: new Date().toISOString(), tasks: notValidated });
+        notValidated.forEach(task => {
+            existing.push(task.name);
+        });
         localStorage.setItem('incompleteTasks', JSON.stringify(existing));
     }
 
@@ -565,7 +565,7 @@ timerInput.addEventListener('keypress', (event) => {
 timerInput.addEventListener('keydown', (event) => {
     const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
     const isNumber = event.key >= '0' && event.key <= '9';
-    
+
     if (!isNumber && !allowedKeys.includes(event.key)) {
         event.preventDefault();
     }
