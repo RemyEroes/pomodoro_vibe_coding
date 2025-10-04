@@ -98,7 +98,7 @@ function updateButtonVisibility() {
         resetButton.classList.remove('secondary');
     } else {
         pauseButton.style.display = 'none';
-        if (timeLeft === 25 * 60) { // Temps par défaut
+        if (timeLeft === 25 * 60 || (!isRunning && !isPaused && !isFinished)) { // Temps par défaut
             startButton.style.display = 'inline-block';
             resetButton.style.display = 'none';
             completeButton.style.display = 'none';
@@ -150,30 +150,35 @@ function toggleMode() {
     
     isBreakMode = !isBreakMode;
     
+    const oldTime = timeLeft;
+    const newTime = isBreakMode ? 5 * 60 : 25 * 60;
+    
     if (isBreakMode) {
-        timeLeft = 5 * 60; // 5 minutes pour le break
         applyBreakModeStyle();
         modeSwitch.textContent = '💼 Work';
         // Cacher les tâches en mode break
         document.querySelector('.tasks-container').style.display = 'none';
     } else {
-        timeLeft = 25 * 60; // 25 minutes pour le work
         removeBreakModeStyle();
         modeSwitch.textContent = '☕ Break';
         // Afficher les tâches en mode work
         document.querySelector('.tasks-container').style.display = 'block';
     }
     
-    updateDisplay();
+    // Animer la transition du timer
+    animateTimerTransition(oldTime, newTime);
     saveSession();
 }
 
 // Fonction pour appliquer le style du mode break
 function applyBreakModeStyle() {
     timerInput.style.color = '#8B4513'; // Marron
-    timerInput.style.borderColor = '#8B4513';
+    // timerInput.style.borderColor = '#8B4513';
     document.querySelectorAll('.controls button').forEach(btn => {
         if (btn.classList.contains('primary')) {
+            btn.style.background = '#8B4513';
+        }
+        if(btn.getAttribute('id') === 'pause') {
             btn.style.background = '#8B4513';
         }
     });
@@ -187,7 +192,7 @@ function removeBreakModeStyle() {
     timerInput.style.color = '#D42113';
     timerInput.style.borderColor = 'transparent';
     document.querySelectorAll('.controls button').forEach(btn => {
-        if (!btn.classList.contains('secondary')) {
+        if (btn.classList.contains('primary')) {
             btn.style.background = '#D42113';
         }
     });
@@ -257,6 +262,8 @@ function loadSession() {
             document.querySelector('.tasks-container').style.display = 'none';
             sessionNameInput.value = 'Break';
             sessionNameInput.setAttribute('disabled', 'true');
+
+            
         }
 
         if (session.tasks && session.tasks.length > 0) {
@@ -323,6 +330,15 @@ function loadSession() {
             }
         }
     }
+
+    // Si on est en mode break mais que le temps n'est pas défini, le définir à 5 minutes
+    if (isBreakMode && timeLeft !== 5 * 60) {
+        timeLeft = 5 * 60;
+    }
+    if (!isBreakMode && timeLeft !== 25 * 60) {
+        timeLeft = 25 * 60;
+    }
+
 }
 
 // Fonction pour charger les tâches incomplètes depuis le localStorage
@@ -754,6 +770,35 @@ function animateTimerOnLoad() {
     // Si une session est déjà en cours, ajouter 2s au temps (animation)
     if (isRunning || isPaused) {
         timeLeft = Math.max(0, timeLeft + 2 );
+    }
+
+    requestAnimationFrame(animate);
+}
+
+// Fonction pour animer la transition du timer lors du changement de mode
+function animateTimerTransition(oldTime, newTime) {
+    const duration = 800; // Durée de l'animation en ms
+    const startTime = Date.now();
+
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Utiliser une courbe d'easing pour un effet plus fluide
+        const easeInOutQuad = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        
+        const currentTime = Math.floor(oldTime + (newTime - oldTime) * easeInOutQuad);
+
+        timerInput.value = formatTime(currentTime);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            timeLeft = newTime;
+            timerInput.value = formatTime(newTime);
+        }
     }
 
     requestAnimationFrame(animate);
