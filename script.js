@@ -247,7 +247,10 @@ function activateBreakMode() {
 
 // Ajouter la date actuelle à la session sauvegardée
 function saveSession() {
-    const sessionName = sessionNameInput.value.trim() || generateSessionName();
+    let sessionName = ''
+    if (isPaused || isRunning || isFinished) {
+        sessionName = sessionNameInput.value.trim() || generateSessionName();
+    }
     const session = {
         name: sessionName,
         timeLeft,
@@ -372,14 +375,16 @@ function loadSession() {
         }
     }
 
-    // Si on est en mode break mais que le temps n'est pas défini, le définir à 5 minutes
-    if (isBreakMode && timeLeft !== 5 * 60) {
-        timeLeft = 5 * 60;
-         sessionNameInput.value = 'Break';
-    sessionNameInput.setAttribute('disabled', 'true');
-    }
-    if (!isBreakMode && timeLeft !== 25 * 60) {
-        timeLeft = 25 * 60;
+    if (!isRunning && !isPaused && !isFinished) {
+        // Si on est en mode break mais que le temps n'est pas défini, le définir à 5 minutes
+        if (isBreakMode && timeLeft !== 5 * 60) {
+            timeLeft = 5 * 60;
+            sessionNameInput.value = 'Break';
+            sessionNameInput.setAttribute('disabled', 'true');
+        }
+        if (!isBreakMode && timeLeft !== 25 * 60) {
+            timeLeft = 25 * 60;
+        }
     }
 
 
@@ -817,7 +822,7 @@ function animateTimerOnLoad() {
 
     // Si une session est déjà en cours, ajouter 2s au temps (animation)
     if (isRunning || isPaused) {
-        timeLeft = Math.max(0, timeLeft + 2);
+        timeLeft = Math.max(0, timeLeft + 2 );
     }
 
     // if isFinished set to 00:00
