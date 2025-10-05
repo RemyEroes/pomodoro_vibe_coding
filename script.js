@@ -4,6 +4,7 @@ let isRunning = false;
 let isPaused = false;
 let isFinished = false;
 let taskIdCounter = 0; // Compteur global pour générer des IDs uniques
+let isBreakMode = false; // Mode pause/break
 
 const timerInput = document.getElementById('timer-input');
 const startButton = document.getElementById('start');
@@ -26,6 +27,19 @@ sessionNameInput.placeholder = 'Nom de la session';
 sessionNameInput.classList.add('session-name-input');
 sessionNameInput.autocomplete = 'off'; // Désactiver le remplissage automatique
 document.querySelector('.pomodoro-container').insertBefore(sessionNameInput, document.querySelector('.timer-display'));
+
+// Ajouter un bouton de switch pour passer entre work et break
+const modeSwitch = document.createElement('button');
+modeSwitch.id = 'mode-switch';
+modeSwitch.textContent = '☕ Break';
+modeSwitch.classList.add('mode-switch');
+modeSwitch.style.display = 'none'; // Caché par défaut, visible seulement quand approprié
+// document.querySelector('.pomodoro-container').insertBefore(modeSwitch, document.querySelector('.timer-display'));
+// mode switch dans le body position fixed bas a gauche
+document.body.appendChild(modeSwitch);
+modeSwitch.style.position = 'fixed';
+modeSwitch.style.bottom = '20px';
+modeSwitch.style.left = '20px';
 
 // Fonction pour formater le temps en MM:SS
 function formatTime(totalSeconds) {
@@ -84,7 +98,7 @@ function updateButtonVisibility() {
         resetButton.classList.remove('secondary');
     } else {
         pauseButton.style.display = 'none';
-        if (timeLeft === 25 * 60) { // Temps par défaut
+        if (timeLeft === 25 * 60 || (!isRunning && !isPaused && !isFinished)) { // Temps par défaut
             startButton.style.display = 'inline-block';
             resetButton.style.display = 'none';
             completeButton.style.display = 'none';
@@ -111,10 +125,15 @@ function updateInputState() {
         timerInput.setAttribute('disabled', 'true');
         timerInput.classList.add('no-hover');
         sessionNameInput.setAttribute('disabled', 'true');
+        modeSwitch.style.display = 'none';
     } else {
         timerInput.removeAttribute('disabled');
         timerInput.classList.remove('no-hover');
         sessionNameInput.removeAttribute('disabled');
+        // Afficher le switch seulement si pas en mode finished
+        if (!isFinished) {
+            modeSwitch.style.display = 'inline-block';
+        }
     }
 }
 
@@ -123,6 +142,107 @@ function generateSessionName() {
     const now = new Date();
     const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
     return now.toLocaleString('fr-FR', options).replace(',', ' |');
+}
+
+// Fonction pour basculer entre work et break mode
+function toggleMode() {
+    if (isRunning || isPaused) return; // Ne pas permettre de changer le mode pendant une session active
+
+    isBreakMode = !isBreakMode;
+
+    const oldTime = timeLeft;
+    const newTime = isBreakMode ? 5 * 60 : 25 * 60;
+
+    if (isBreakMode) {
+        applyBreakModeStyle();
+        modeSwitch.textContent = '💼 Work';
+        // Cacher les tâches en mode break
+        document.querySelector('.tasks-container').style.display = 'none';
+    } else {
+        removeBreakModeStyle();
+        modeSwitch.textContent = '☕ Break';
+        // Afficher les tâches en mode work
+        document.querySelector('.tasks-container').style.display = 'block';
+    }
+
+    // Animer la transition du timer
+    animateTimerTransition(oldTime, newTime);
+    saveSession();
+}
+
+// Fonction pour appliquer le style du mode break
+function applyBreakModeStyle() {
+    timerInput.style.color = '#8B4513'; // Marron
+    // timerInput.style.borderColor = '#8B4513';
+    document.querySelectorAll('.controls button').forEach(btn => {
+        if (btn.classList.contains('primary')) {
+            btn.style.background = '#8B4513';
+        }
+        if (btn.getAttribute('id') === 'pause') {
+            btn.style.background = '#8B4513';
+        }
+    });
+
+    const timerDisplay = document.getElementsByClassName('timer-display')[0];
+    // timerDisplay.style.borderColor = '#8B4513';
+
+    // Ajouter un effet :hover via JavaScript
+    timerDisplay.addEventListener('mouseenter', () => {
+        timerDisplay.style.borderColor = '#8B4513'; // Couleur plus claire au survol
+        timerDisplay.style.background = '#8b451317';
+    });
+
+    timerDisplay.addEventListener('mouseleave', () => {
+        timerDisplay.style.borderColor = 'transparent'; // Revenir à la couleur d'origine
+        timerDisplay.style.background = 'transparent';
+    });
+
+    modeSwitch.textContent = '💼 Work';
+    sessionNameInput.value = 'Break';
+    sessionNameInput.setAttribute('disabled', 'true');
+}
+
+// Fonction pour retirer le style du mode break
+function removeBreakModeStyle() {
+    timerInput.style.color = '#D42113';
+    timerInput.style.borderColor = 'transparent';
+    document.querySelectorAll('.controls button').forEach(btn => {
+        if (btn.classList.contains('primary')) {
+            btn.style.background = '#D42113';
+        }
+        if (btn.getAttribute('id') === 'pause') {
+            btn.style.background = '#D42113';
+        }
+    });
+
+    const timerDisplay = document.getElementsByClassName('timer-display')[0];
+    // timerDisplay.style.borderColor = '#D42113';
+
+    // Ajouter un effet :hover via JavaScript
+    timerDisplay.addEventListener('mouseenter', () => {
+        timerDisplay.style.borderColor = '#D42113'; // Couleur plus claire au survol
+        timerDisplay.style.background = '#D4211317';
+    });
+
+    timerDisplay.addEventListener('mouseleave', () => {
+        timerDisplay.style.borderColor = 'transparent'; // Revenir à la couleur d'origine
+        timerDisplay.style.background = 'transparent';
+    });
+
+    modeSwitch.textContent = '☕ Break';
+    sessionNameInput.value = '';
+    sessionNameInput.removeAttribute('disabled');
+}
+
+// Fonction pour activer le mode break (appelée après complete)
+function activateBreakMode() {
+    isBreakMode = true;
+    timeLeft = 5 * 60; // 5 minutes
+    applyBreakModeStyle();
+    document.querySelector('.tasks-container').style.display = 'none';
+    modeSwitch.style.display = 'block';
+    updateDisplay();
+    saveSession();
 }
 
 // Ajouter la date actuelle à la session sauvegardée
@@ -134,6 +254,7 @@ function saveSession() {
         isRunning,
         isPaused,
         isFinished,
+        isBreakMode,
         date: new Date().toISOString(), // Ajouter la date actuelle
         tasks: saveTasks(),
     };
@@ -145,6 +266,7 @@ function saveCompletedSession(session) {
     const completedSessions = JSON.parse(localStorage.getItem('completedSessions')) || [];
     completedSessions.push(session);
     localStorage.setItem('completedSessions', JSON.stringify(completedSessions));
+
 }
 
 // Fonction pour charger une session depuis le localStorage
@@ -164,8 +286,26 @@ function loadSession() {
         isRunning = session.isRunning;
         isPaused = session.isPaused;
         isFinished = timeLeft === 0; // Définir isFinished à true si le temps est écoulé
+        isBreakMode = session.isBreakMode || false; // Charger le mode break
 
-        sessionNameInput.value = session.name || ''; // Charger le nom de la session
+        // Lors du chargement de la session, gérer l'input sessionNameInput en mode break
+        if (isBreakMode) {
+            sessionNameInput.value = 'Break';
+            sessionNameInput.setAttribute('disabled', 'true');
+        } else {
+            sessionNameInput.value = session.name || ''; // Charger le nom de la session
+            sessionNameInput.removeAttribute('disabled');
+        }
+
+        // Appliquer le style du mode break si nécessaire
+        if (isBreakMode) {
+            applyBreakModeStyle();
+            document.querySelector('.tasks-container').style.display = 'none';
+            sessionNameInput.value = 'Break';
+            sessionNameInput.setAttribute('disabled', 'true');
+
+
+        }
 
         if (session.tasks && session.tasks.length > 0) {
             loadTasks(session.tasks); // Charger les tâches
@@ -231,6 +371,18 @@ function loadSession() {
             }
         }
     }
+
+    // Si on est en mode break mais que le temps n'est pas défini, le définir à 5 minutes
+    if (isBreakMode && timeLeft !== 5 * 60) {
+        timeLeft = 5 * 60;
+         sessionNameInput.value = 'Break';
+    sessionNameInput.setAttribute('disabled', 'true');
+    }
+    if (!isBreakMode && timeLeft !== 25 * 60) {
+        timeLeft = 25 * 60;
+    }
+
+
 }
 
 // Fonction pour charger les tâches incomplètes depuis le localStorage
@@ -352,6 +504,14 @@ function handleSessionEnd() {
     pauseButton.style.display = 'none';
     resetButton.style.display = 'none';
 
+    // En mode break, juste afficher le bouton complete sans mini-jeu
+    if (isBreakMode) {
+        completeButton.style.display = 'inline-block';
+        updateButtonVisibility();
+        notifyUser();
+        return;
+    }
+
     // Rendre les tâches cliquables pour validation
     makeTasksValidatable();
 
@@ -369,23 +529,27 @@ function handleSessionEnd() {
 // Fonction pour démarrer le minuteur
 function startTimer() {
     if (!isRunning) {
-        // Vérifier si aucune tâche n'est définie
+        // Vérifier si aucune tâche n'est définie (seulement en mode work)
         const taskInputs = document.querySelectorAll('.task-input');
         const noTasksMessage = document.getElementById('no-tasks-message');
 
-        if (taskInputs.length === 0) {
-            if (!noTasksMessage) {
-                const message = document.createElement('h5');
-                message.id = 'no-tasks-message';
-                message.textContent = 'No tasks defined';
-                document.getElementById('tasks-list').appendChild(message);
-            }
-        } else if (noTasksMessage) {
-            noTasksMessage.remove(); // Supprimer le message si des tâches existent
-        }
+        // En mode work, vérifier les tâches
+        if (!isBreakMode) {
 
-        // Supprimer les tâches incomplètes du localStorage
-        localStorage.removeItem('incompleteTasks');
+            if (taskInputs.length === 0) {
+                if (!noTasksMessage) {
+                    const message = document.createElement('h5');
+                    message.id = 'no-tasks-message';
+                    message.textContent = 'No tasks defined';
+                    document.getElementById('tasks-list').appendChild(message);
+                }
+            } else if (noTasksMessage) {
+                noTasksMessage.remove(); // Supprimer le message si des tâches existent
+            }
+
+            // Supprimer les tâches incomplètes du localStorage
+            localStorage.removeItem('incompleteTasks');
+        }
 
         isRunning = true;
         isPaused = false;
@@ -430,10 +594,18 @@ function resetTimer() {
     isRunning = false;
     isPaused = false;
     isFinished = false;
-    timeLeft = 25 * 60; // Remettre au temps par défaut
+
+    // Si on est en mode break, rester en mode break et réinitialiser au temps break
+    if (isBreakMode) {
+        timeLeft = 5 * 60; // 5 minutes pour le break
+        sessionNameInput.value = 'Break';
+    } else {
+        timeLeft = 25 * 60; // 25 minutes pour le work
+        sessionNameInput.value = ''; // Effacer le nom de la session
+    }
+
     localStorage.removeItem('pomodoroSession'); // Supprimer la session
     startButton.textContent = 'Start'; // Revenir à "Start" après un reset
-    sessionNameInput.value = ''; // Effacer le nom de la session
 
     // Supprimer les tâches de l'UI et réactiver les contrôles
     if (typeof tasksList !== 'undefined' && tasksList) {
@@ -451,6 +623,26 @@ function resetTimer() {
 
 // Modification de handleSessionComplete pour charger les tâches incomplètes après avoir complété une session
 function handleSessionComplete() {
+    // Si on est en mode break, passer en mode work
+    if (isBreakMode) {
+        isBreakMode = false;
+        isFinished = false;
+        removeBreakModeStyle();
+        timeLeft = 25 * 60;
+        document.querySelector('.tasks-container').style.display = 'block';
+        localStorage.removeItem('pomodoroSession');
+        updateDisplay();
+        updateButtonVisibility();
+        updateInputState();
+
+        // Charger les tâches incomplètes
+        const incompleteTasks = loadIncompleteTasks();
+        if (incompleteTasks.length > 0) {
+            loadTasks(incompleteTasks);
+        }
+        return;
+    }
+
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
 
     document.body.classList.remove('timer-finished');
@@ -480,7 +672,11 @@ function handleSessionComplete() {
     }
 
     localStorage.removeItem('pomodoroSession');
-    timeLeft = 25 * 60;
+
+    // Activer le mode break après la complétion
+    activateBreakMode();
+
+
     isRunning = false;
     isPaused = false;
     isFinished = false;
@@ -498,27 +694,38 @@ function handleSessionComplete() {
 
     // load completed tasks in the list
     loadCompletedTasks()
+
+    sessionNameInput.value = 'Break';
+    sessionNameInput.setAttribute('disabled', 'true');
 }
 
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('Service Worker enregistré ✅'))
-    .catch(err => console.error('Erreur SW:', err));
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker enregistré ✅'))
+        .catch(err => console.error('Erreur SW:', err));
 }
 
 function notifyUser() {
-  if (Notification.permission === 'granted') {
-    navigator.serviceWorker.ready.then(registration => {
-      registration.showNotification('🍅 Pomodoro terminé !', {
-        body: 'Prenez une pause bien méritée !',
-      });
-    });
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') notifyUser();
-    });
-  }
+    if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(registration => {
+            if (isBreakMode) {
+                // Notification pour la fin de la pause
+                registration.showNotification('☕ Pause terminée !', {
+                    body: 'C\'est l\'heure de reprendre le travail !',
+                });
+            } else {
+                // Notification pour la fin du pomodoro
+                registration.showNotification('🍅 Pomodoro terminé !', {
+                    body: 'Prenez une pause bien méritée !',
+                });
+            }
+        });
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') notifyUser();
+        });
+    }
 }
 
 // Gestion des événements
@@ -541,6 +748,7 @@ startButton.addEventListener('click', () => {
 
 pauseButton.addEventListener('click', pauseTimer);
 resetButton.addEventListener('click', resetTimer);
+modeSwitch.addEventListener('click', toggleMode);
 
 // Gestion de la saisie dans l'input
 timerInput.addEventListener('input', (event) => {
@@ -583,7 +791,7 @@ timerInput.addEventListener('keydown', (event) => {
 
 // Fonction pour animer le compteur de 00:00 au temps par défaut
 function animateTimerOnLoad() {
-    const targetTime = timeLeft;
+    let targetTime = timeLeft;
     const duration = 2000; // Durée de l'animation en ms
     const startTime = Date.now();
 
@@ -609,7 +817,41 @@ function animateTimerOnLoad() {
 
     // Si une session est déjà en cours, ajouter 2s au temps (animation)
     if (isRunning || isPaused) {
-        timeLeft = Math.max(0, timeLeft + 2 );
+        timeLeft = Math.max(0, timeLeft + 2);
+    }
+
+    // if isFinished set to 00:00
+    if (isFinished) {
+        targetTime = 0;
+    }
+
+    requestAnimationFrame(animate);
+}
+
+// Fonction pour animer la transition du timer lors du changement de mode
+function animateTimerTransition(oldTime, newTime) {
+    const duration = 800; // Durée de l'animation en ms
+    const startTime = Date.now();
+
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Utiliser une courbe d'easing pour un effet plus fluide
+        const easeInOutQuad = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        const currentTime = Math.floor(oldTime + (newTime - oldTime) * easeInOutQuad);
+
+        timerInput.value = formatTime(currentTime);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            timeLeft = newTime;
+            timerInput.value = formatTime(newTime);
+        }
     }
 
     requestAnimationFrame(animate);
@@ -623,7 +865,6 @@ updateInputState();
 // Charger la session au rechargement de la page
 window.addEventListener('load', () => {
     loadSession();
-    
     // Toujours lancer l'animation au chargement
     animateTimerOnLoad();
 });
@@ -1016,9 +1257,9 @@ function loadCompletedTasks() {
         const diffDays = Math.floor((today - taskDate) / (1000 * 60 * 60 * 24));
         let label;
 
-        if (diffDays === 0) label = "Aujourd'hui";
-        else if (diffDays === 1) label = "Hier";
-        else if (diffDays === 2) label = "Avant-hier";
+        if (diffDays === 0) label = "Today";
+        else if (diffDays === 1) label = "Yesterday";
+        else if (diffDays === 2) label = "Day before yesterday";
         else label = formatDate(taskDate);
 
         if (!acc[label]) acc[label] = [];
