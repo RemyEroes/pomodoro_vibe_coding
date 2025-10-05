@@ -1316,9 +1316,9 @@ function deleteCompletedTask(taskToDelete) {
 window.addEventListener('load', loadCompletedTasks);
 
 
-// au load si on est pas sur localhost on change va sur localhost:55000
+// au load si on est pas sur localhost ou sur pomodoro.remy-eroes.site on change va sur localhost:55000
 window.addEventListener('load', () => {
-    if (location.hostname !== 'localhost') {
+    if (location.hostname !== 'localhost' && location.hostname !== 'pomodoro.remy-eroes.site') {
         location.href = 'http://localhost:5500';
     }
 });
