@@ -23,7 +23,7 @@ document.querySelector('.controls').appendChild(completeButton);
 const sessionNameInput = document.createElement('input');
 sessionNameInput.id = 'session-name';
 sessionNameInput.type = 'text';
-sessionNameInput.placeholder = 'Nom de la session';
+sessionNameInput.placeholder = 'Session name';
 sessionNameInput.classList.add('session-name-input');
 sessionNameInput.autocomplete = 'off'; // Désactiver le remplissage automatique
 document.querySelector('.pomodoro-container').insertBefore(sessionNameInput, document.querySelector('.timer-display'));
@@ -881,7 +881,7 @@ addTaskButton.addEventListener('click', () => {
 
     const taskInput = document.createElement('input');
     taskInput.type = 'text';
-    taskInput.placeholder = 'Nom de la tâche';
+    taskInput.placeholder = 'Task name';
     taskInput.classList.add('task-input');
 
     // Ajouter un ID unique à la tâche
