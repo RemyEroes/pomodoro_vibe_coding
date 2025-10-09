@@ -25,6 +25,11 @@ body.timer-finished #session-name {
     user-select: none;
 }
 
+body::selection{
+    color: currentColor;
+    background: transparent;
+}
+
 body.timer-finished .task-item {
     pointer-events: none;
 }
