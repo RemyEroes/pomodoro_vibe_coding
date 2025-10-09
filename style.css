@@ -11,6 +11,7 @@ body {
     align-items: center;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 /* if body has class "timer-finished" */
@@ -20,11 +21,14 @@ body.timer-finished .task-input,
 body.timer-finished .remove-validation,
 body.timer-finished #session-name {
     cursor: none;
+
+    user-select: none;
 }
 
 body.timer-finished .task-item {
     pointer-events: none;
 }
+
 
 .pomodoro-container {
     /* background: #fff; */
