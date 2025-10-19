@@ -8,7 +8,7 @@
 
 <h2>📸 Project Screenshots:</h2>
 
-<img src="https://pomodoro.remy-eroes.site/images/pomodoro-screen.png" alt="project-screenshot" width="100%" height="100%">
+<img src="https://pomodoro.remy-eroes.site/images/pomodoro-screenshot.png" alt="project-screenshot" width="100%" height="100%">
 
   
   
