@@ -671,6 +671,12 @@ function handleSessionComplete() {
         document.querySelector('.main').style.justifyContent = 'center';
     }
 
+    //remove the crosshair element if it exists
+    const crosshair = document.querySelector('.crosshair');
+    if (crosshair) {
+        crosshair.remove();
+    }
+
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
 
     document.body.classList.remove('timer-finished');
