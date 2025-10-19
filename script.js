@@ -38,8 +38,9 @@ modeSwitch.style.display = 'none'; // Caché par défaut, visible seulement quan
 // mode switch dans le body position fixed bas a gauche
 document.body.appendChild(modeSwitch);
 modeSwitch.style.position = 'fixed';
-modeSwitch.style.bottom = '20px';
-modeSwitch.style.left = '20px';
+modeSwitch.style.bottom = ' 5px';
+modeSwitch.style.left = '3.2vw';
+
 
 // Fonction pour formater le temps en MM:SS
 function formatTime(totalSeconds) {
@@ -158,11 +159,19 @@ function toggleMode() {
         modeSwitch.textContent = '💼 Work';
         // Cacher les tâches en mode break
         document.querySelector('.tasks-container').style.display = 'none';
+
+        document.querySelector('.main').style.width = '100%';
+        document.querySelector('.main').style.justifyContent = 'center';
+
     } else {
         removeBreakModeStyle();
         modeSwitch.textContent = '☕ Break';
         // Afficher les tâches en mode work
+        document.querySelector('.tasks-container').style.animationDelay = '0.3s';
         document.querySelector('.tasks-container').style.display = 'block';
+
+        document.querySelector('.main').style.width = 'calc(100% - 4vw - 380px)';
+        document.querySelector('.main').style.justifyContent = 'start';
     }
 
     // Animer la transition du timer
@@ -295,9 +304,15 @@ function loadSession() {
         if (isBreakMode) {
             sessionNameInput.value = 'Break';
             sessionNameInput.setAttribute('disabled', 'true');
+            document.querySelector('.main').style.width = '100%';
+            document.querySelector('.main').style.justifyContent = 'center';
+
+
         } else {
             sessionNameInput.value = session.name || ''; // Charger le nom de la session
             sessionNameInput.removeAttribute('disabled');
+            document.querySelector('.main').style.width = 'calc(100% - 4vw - 380px)';
+            document.querySelector('.main').style.justifyContent = 'start';
         }
 
         // Appliquer le style du mode break si nécessaire
@@ -640,12 +655,20 @@ function handleSessionComplete() {
         updateButtonVisibility();
         updateInputState();
 
+        // Ajuster le style de la .main
+        document.querySelector('.main').style.width = 'calc(100% - 4vw - 380px)';
+        document.querySelector('.main').style.justifyContent = 'start';
+
         // Charger les tâches incomplètes
         const incompleteTasks = loadIncompleteTasks();
         if (incompleteTasks.length > 0) {
             loadTasks(incompleteTasks);
         }
         return;
+    } else {
+        // Ajuster le style de la .main
+        document.querySelector('.main').style.width = '100%';
+        document.querySelector('.main').style.justifyContent = 'center';
     }
 
     const sessionName = sessionNameInput.value.trim() || generateSessionName();
@@ -822,7 +845,7 @@ function animateTimerOnLoad() {
 
     // Si une session est déjà en cours, ajouter 2s au temps (animation)
     if (isRunning || isPaused) {
-        timeLeft = Math.max(0, timeLeft + 2 );
+        timeLeft = Math.max(0, timeLeft + 2);
     }
 
     // if isFinished set to 00:00
@@ -881,7 +904,16 @@ completeButton.addEventListener('click', handleSessionComplete);
 const addTaskButton = document.getElementById('add-task');
 const tasksList = document.getElementById('tasks-list');
 
+
 addTaskButton.addEventListener('click', () => {
+    // check si tous les champs de tâches sont remplis
+    const taskInputs = document.querySelectorAll('.task-input');
+    for (let input of taskInputs) {
+        if (input.value.trim() === '') {
+            alert('Please fill in all task fields before adding a new one.');
+            return;
+        }
+    }
     const taskItem = document.createElement('li');
 
     const taskInput = document.createElement('input');
@@ -963,7 +995,8 @@ function startTomatoGame() {
 
     // Ajouter le curseur personnalisé
     const crosshair = document.createElement('img');
-    crosshair.src = '/assets/Crosshair3.svg';
+    crosshair.src = '/assets/Crosshair.svg';
+    crosshair.classList.add('crosshair');
     crosshair.alt = 'Crosshair';
     crosshair.style.position = 'absolute';
     crosshair.style.width = '30px';
@@ -1076,12 +1109,15 @@ function startTomatoGame() {
         // Animation de la tomate sans easing
         const animation = tomato.animate([
             { bottom: '0', left: '50%', opacity: 1 },
-            { bottom: `${targetY}px`, left: `${targetX}px` }
+            { bottom: `${targetY}px`, opacity: 1, left: `${targetX}px` }
         ], {
             duration: duration,
             easing: 'cubic-bezier(0.11, 0, 0.5, 0)', // Pas de easing
             fill: 'forwards'
         });
+
+        // ajout de la class tomato.classList.add('tomato-img-throwed');
+        tomato.classList.add('tomato-img-throwed');
 
         animation.onfinish = () => {
             tomato.style.bottom = `${targetY}px`;
@@ -1323,3 +1359,17 @@ window.addEventListener('load', () => {
     }
 });
 
+// mettre le titre en blend-mode darken ou plus-darker pour safari
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const title = document.querySelector('h1');
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (isSafari) {
+                title.style.mixBlendMode = 'plus-darker';
+                title.style.filter = 'brightness(1.03) contrast(0.9)';
+        }else{       
+            title.style.mixBlendMode = 'darken';
+        }
+    }, 1500);
+
+});

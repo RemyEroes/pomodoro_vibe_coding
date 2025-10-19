@@ -7,25 +7,33 @@ body {
     margin: 0;
     padding: 0;
     display: flex;
-    /* justify-content: center; */
-    align-items: center;
+    /* align-items: center; */
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
 }
 
+
+
 /* if body has class "timer-finished" */
 body.timer-finished,
+body.timer-finished .main,
 body.timer-finished .controls button,
 body.timer-finished .task-input,
 body.timer-finished .remove-validation,
 body.timer-finished #session-name {
     cursor: none;
-
     user-select: none;
+     -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* vieux Edge */
+
 }
 
-body::selection{
+body::selection {
     color: currentColor;
     background: transparent;
 }
@@ -34,33 +42,98 @@ body.timer-finished .task-item {
     pointer-events: none;
 }
 
+.background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f6f2eb;
+    pointer-events: none;
+    user-select: none;
+}
+
+.background img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.3;
+    mix-blend-mode: luminosity;
+    transform: scale(1.2) translateY(-1vw) rotate(5deg);
+    pointer-events: none;
+    user-select: none;
+}
+
+
+/* blend mode -----------------*/
+/* Valeurs par défaut — tous navigateurs sauf Safari */
+.pomodoro-container,
+.tasks-container,
+.completed-tasks-container,
+.mode-switch,
+.crosshair{
+    mix-blend-mode: darken;
+}
+
+/* Safari uniquement */
+@supports (-webkit-hyphens: none) and (not (-ms-accelerator: true)) and (not (-moz-appearance: none)) {
+
+    .pomodoro-container,
+    .tasks-container,
+    .completed-tasks-container,
+    .mode-switch,
+    .crosshair {
+        mix-blend-mode: plus-darker;
+        filter: brightness(1.03) contrast(0.9);
+    }
+}
+
+/* blend mode -----------------*/
+
+.main {
+    display: flex;
+    margin-top: -1vw;
+    margin-left: 3.2vw;
+    gap: 5vw;
+    width: calc(100% - 4vw - 380px);
+    justify-content: start;
+}
 
 .pomodoro-container {
-    /* background: #fff; */
-    padding: 20px;
     border-radius: 10px;
-    /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
     text-align: center;
-    width: 300px;
-    margin-top: 10vh;
+    width: 450px;
 }
 
 h1 {
     margin: 0 0 20px;
-    font-size: 80px;
+    /* font-size: 80px; */
+    font-size: 17vw;
     color: #333;
     font-family: 'Dela Gothic One', cursive;
     text-transform: uppercase;
     display: flex;
     justify-content: center;
     align-items: center;
+
     pointer-events: none;
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* vieux Edge */
     user-select: none;
+
+    margin-top: -3vw;
 }
 
-h1 span{
+h1 span {
     opacity: 0;
     animation: title-appear-1-3 0.2s linear forwards;
+    pointer-events: none;
+    user-select: none;
 }
 
 h1 span:nth-of-type(1) {
@@ -77,6 +150,7 @@ h1 span:nth-of-type(3) {
     animation: title-appear-1-3 0.2s linear forwards;
     animation-delay: 1.2s;
 }
+
 h1 span:nth-of-type(4) {
     animation: title-appear-2-4 0.2s linear forwards;
     animation-delay: 1.4s;
@@ -87,6 +161,7 @@ h1 span:nth-of-type(4) {
         opacity: 0;
         transform: translateY(-20px) translateX(-10px) scale(1.3) rotate(-10deg);
     }
+
     1% {
         opacity: 1;
     }
@@ -102,6 +177,7 @@ h1 span:nth-of-type(4) {
         opacity: 0;
         transform: translateY(-20px) translateX(10px) scale(1.3) rotate(10deg);
     }
+
     1% {
         opacity: 1;
     }
@@ -117,50 +193,68 @@ h1 img {
     /* height: 130px; */
     margin: -12%;
     z-index: 1;
+    will-change: transform, opacity, content, url;
+    backface-visibility: hidden;
+    transform: translateZ(0);
     animation-fill-mode: forwards;
     opacity: 0;
     content: url('/tomatoes-title/tomato-clear.png');
-    /* Image par défaut */
 }
 
 h1 img:first-of-type {
-    margin-right: -16%;
-    width: 136px;
-    animation: tomato-throw-1 .8s ease-in;
+    /* margin-right: -16%; */
+    /* width: 136px; */
+    margin-right: -10vw;
+    margin-left: -7vw;
+    margin-top: -7vw;
+    width: 23vw;
+    animation: tomato-throw-1 1s cubic-bezier(0.550, 0.085, 0.680, 0.530);
     animation-delay: 0.3s;
     animation-fill-mode: forwards;
 }
 
 
 
+
 h1 img:nth-of-type(2) {
-    width: 112px;
-    animation: tomato-throw-2 .8s ease-in;
+    /* width: 112px; */
+    margin-right: -8vw;
+    margin-left: -5vw;
+    width: 21vw;
+    animation: tomato-throw-2 1s cubic-bezier(0.550, 0.085, 0.680, 0.530);
     animation-delay: 0.5s;
     animation-fill-mode: forwards;
 }
 
 h1 img:nth-of-type(3) {
-    width: 127px;
-    animation: tomato-throw-3 .7s ease-in;
+    /* width: 127px; */
+    margin-right: -9vw;
+    margin-left: -9vw;
+    margin-top: -7vw;
+    width: 24vw;
+    animation: tomato-throw-3 1s cubic-bezier(0.550, 0.085, 0.680, 0.530);
     animation-delay: 0.6s;
     animation-fill-mode: forwards;
 }
 
 h1 img:nth-of-type(4) {
-    width: 124px;
-    animation: tomato-throw-4 .8s ease-in;
+    /* width: 124px; */
+    margin-right: -5vw;
+    margin-left: -8vw;
+    width: 22vw;
+    animation: tomato-throw-4 1s cubic-bezier(0.550, 0.085, 0.680, 0.530);
     animation-delay: 0.8s;
     animation-fill-mode: forwards;
 }
 
 .timer-display {
-    font-size: 80px;
+    font-size: 230px;
+    max-height: 220px;
     color: #D42113;
     background: transparent;
     border: 2px solid transparent;
     border-radius: 8px;
-    margin: 20px 0px;
+    margin: 10px 0px;
     text-align: center;
     width: 90%;
     max-width: 100%;
@@ -190,7 +284,7 @@ h1 img:nth-of-type(4) {
         opacity: 1;
         transform: scale(1);
     }
-    
+
 }
 
 .timer-display:hover {
@@ -216,9 +310,22 @@ h1 img:nth-of-type(4) {
 
 .controls {
     display: flex;
-    animation: controls-appear 0.3s ease forwards;
+    animation: controls-appear 0.3s cubic-bezier(0.76, 0, 0.24, 1) forwards;
     animation-delay: 1.6s;
     opacity: 0;
+}
+
+/* Make sure controls and their buttons are on top and receive pointer events
+   (mix-blend-mode earlier can make color changes invisible; override it here) */
+.controls {
+    position: relative;
+    z-index: 30;
+}
+
+.controls button {
+    mix-blend-mode: normal;
+    pointer-events: auto;
+    transition: background 0.15s ease, transform 0.08s ease;
 }
 
 @keyframes controls-appear {
@@ -231,7 +338,7 @@ h1 img:nth-of-type(4) {
         opacity: 1;
         transform: translateY(0);
     }
-    
+
 }
 
 .controls button {
@@ -251,6 +358,7 @@ h1 img:nth-of-type(4) {
     background: #B71C10;
     /* Teinte plus foncée pour le hover */
 }
+
 .controls button:active {
     transition: scale 0.3s ease;
     transform: scale(0.9);
@@ -308,7 +416,7 @@ h1 img:nth-of-type(4) {
     text-transform: uppercase;
     background-color: transparent;
     transition: box-shadow 0.3s ease, border-color 0.3s ease;
-    animation: session-name-appear 0.3s ease forwards;
+    animation: session-name-appear 0.3s cubic-bezier(0.76, 0, 0.24, 1) forwards;
     animation-delay: 1.6s;
     opacity: 0;
 }
@@ -318,14 +426,20 @@ h1 img:nth-of-type(4) {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0);
     }
-    
+
 }
 
 .session-name-input:focus {
+    outline: none;
+    border-color: #bbb;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+.session-name-input:hover {
     outline: none;
     border-color: #bbb;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
@@ -362,6 +476,7 @@ h1 img:nth-of-type(4) {
         opacity: 0;
         transform: scale(0.9);
     }
+
     100% {
         opacity: 1;
         transform: scale(1);
@@ -379,13 +494,17 @@ h1 img:nth-of-type(4) {
 }
 
 .tasks-container {
-    margin-top: 20px;
+    /* margin-top: 20px; */
     text-align: left;
-    width: 340px;
+    /* width: 340px; */
+    flex-grow: 1;
 
-    animation: task-container-appear 0.5s ease forwards;
-    animation-delay: 0.5s;
+    animation: task-container-appear 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    animation-delay: 1s;
     opacity: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px 0px;
+    border-radius: 8px;
 }
 
 @keyframes task-container-appear {
@@ -398,7 +517,7 @@ h1 img:nth-of-type(4) {
         opacity: 1;
         transform: translateY(0);
     }
-    
+
 }
 
 .task-input-container {
@@ -406,6 +525,7 @@ h1 img:nth-of-type(4) {
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 10px;
+    padding: 0px 20px;
 }
 
 .tasks-container .task-input-container h3 {
@@ -427,13 +547,15 @@ h1 img:nth-of-type(4) {
     font-size: 16px;
     font-family: 'dela Gothic One', cursive;
     text-transform: uppercase;
-    transition:none;
+    transition: none;
 }
+
 
 #add-task:hover {
     background: #D42113;
     color: #fff;
 }
+
 #add-task:active {
     transition: scale 0.1s ease;
     transform: scale(0.95);
@@ -447,7 +569,7 @@ h1 img:nth-of-type(4) {
 #tasks-list {
     list-style: none;
     padding: 0;
-    margin: 10px 0;
+    margin: 20px 0;
 }
 
 #tasks-list #no-tasks-message {
@@ -465,6 +587,7 @@ h1 img:nth-of-type(4) {
 
     animation: task-list-list-appear 0.3s ease forwards;
     opacity: 0;
+    padding: 0 20px;
 }
 
 @keyframes task-list-list-appear {
@@ -477,7 +600,7 @@ h1 img:nth-of-type(4) {
         opacity: 1;
         transform: translateY(0);
     }
-    
+
 }
 
 .task-input {
@@ -491,9 +614,15 @@ h1 img:nth-of-type(4) {
     box-sizing: border-box;
     background-color: transparent;
     transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    max-width: 100%;
 }
 
 .task-input:focus {
+    outline: none;
+    border-color: #bbb;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+.task-input:hover {
     outline: none;
     border-color: #bbb;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
@@ -531,6 +660,7 @@ h1 img:nth-of-type(4) {
     background: #B71C10;
     /* Teinte plus foncée pour le hover */
 }
+
 .delete-task:active {
     transition: scale 0.1s ease;
     transform: scale(0.95);
@@ -652,110 +782,100 @@ h1 img:nth-of-type(4) {
     height: 16px;
 }
 
+
+/* carret color */
+.session-name-input,
+.task-input {
+    caret-color: #918e89;
+}
+
+
+
 @keyframes tomato-throw-1 {
-    0% {
-        transform: translateY(200px) translateX(100px) rotate(80deg) scale(1.5);
+  0% {
+        -webkit-transform: translateY(600px) translateX(100px) rotate(-30deg) scale(6.5);
+        transform: translateY(600px) translateX(100px) rotate(-30deg) scale(6.5);
+        transform-origin: 50% -100%;
+        content: url('/tomatoes-title/tomato-clear.png');
         opacity: 0;
-        content: url('/tomatoes-title/tomato-clear.png');
-    }
-
-    10% {
+  }
+  10% {
         opacity: 1;
     }
-
-    40% {
-        transform: translateY(-100px) translateX(50px) rotate(60deg) scale(1.3);
-    }
-
-    99% {
+  99% {
         content: url('/tomatoes-title/tomato-clear.png');
     }
-
-    100% {
+  100% {
+        -webkit-transform: translateY(0) translateX(0) rotate(0) scale(1);
         transform: translateY(0) translateX(0) rotate(0) scale(1);
-        opacity: 1;
+        transform-origin: 50% 500px;
         content: url('/tomatoes-title/tomato-1.png');
-        /* Image finale */
-    }
+        opacity: 1;
+  }
 }
-
 @keyframes tomato-throw-2 {
-    0% {
-        transform: translateY(200px) translateX(20px) rotate(90deg) scale(1.5);
+  0% {
+        -webkit-transform: translateY(600px) translateX(100px) rotate(-50deg) scale(6.5);
+        transform: translateY(600px) translateX(100px) rotate(-50deg) scale(6.5);
+        transform-origin: 50% -100%;
+        content: url('/tomatoes-title/tomato-clear.png');
         opacity: 0;
-        content: url('/tomatoes-title/tomato-clear.png');
-    }
-
-    10% {
+  }
+  10% {
         opacity: 1;
     }
-
-    70% {
-        transform: translateY(-80px) translateX(30px) rotate(70deg) scale(1.2);
-    }
-
-    99% {
+  99% {
         content: url('/tomatoes-title/tomato-clear.png');
     }
-
-    100% {
+  100% {
+        -webkit-transform: translateY(0) translateX(0) rotate(0) scale(1);
         transform: translateY(0) translateX(0) rotate(0) scale(1);
-        opacity: 1;
+        transform-origin: 50% 500px;
         content: url('/tomatoes-title/tomato-2.png');
-        /* Image finale */
-    }
+        opacity: 1;
+  }
 }
-
 @keyframes tomato-throw-3 {
-    0% {
-        transform: translateY(200px) translateX(-80px) rotate(100deg) scale(1.5);
+  0% {
+        -webkit-transform: translateY(600px) translateX(100px) rotate(60deg) scale(6.5);
+        transform: translateY(600px) translateX(100px) rotate(60deg) scale(6.5);
+        transform-origin: 50% -100%;
+        content: url('/tomatoes-title/tomato-clear.png');
         opacity: 0;
-        content: url('/tomatoes-title/tomato-clear.png');
-    }
-
-    10% {
+  }
+  10% {
         opacity: 1;
     }
-
-    70% {
-        transform: translateY(-120px) translateX(-20px) rotate(50deg) scale(1.4);
-    }
-
-    99% {
+  99% {
         content: url('/tomatoes-title/tomato-clear.png');
     }
-
-    100% {
+  100% {
+        -webkit-transform: translateY(0) translateX(0) rotate(0) scale(1);
         transform: translateY(0) translateX(0) rotate(0) scale(1);
-        opacity: 1;
+        transform-origin: 50% 500px;
         content: url('/tomatoes-title/tomato-3.png');
-        /* Image finale */
-    }
+        opacity: 1;
+  }
 }
-
 @keyframes tomato-throw-4 {
-    0% {
-        transform: translateY(200px) translateX(-200px) rotate(110deg) scale(1.5);
+  0% {
+        -webkit-transform: translateY(600px) translateX(-100px) rotate(-90deg) scale(6.5);
+        transform: translateY(600px) translateX(-100px) rotate(-90deg) scale(6.5);
+        transform-origin: 50% -100%;
+        content: url('/tomatoes-title/tomato-clear.png');
         opacity: 0;
-        content: url('/tomatoes-title/tomato-clear.png');
-    }
-
-    10% {
+  }
+  10% {
         opacity: 1;
     }
-
-    70% {
-        transform: translateY(-90px) translateX(-50px) rotate(40deg) scale(1.3);
-    }
-
-    99% {
+  99% {
         content: url('/tomatoes-title/tomato-clear.png');
     }
-
-    100% {
+  100% {
+        -webkit-transform: translateY(0) translateX(0) rotate(0) scale(1);
         transform: translateY(0) translateX(0) rotate(0) scale(1);
-        opacity: 1;
+        transform-origin: 50% 500px;
         content: url('/tomatoes-title/tomato-4.png');
-        /* Image finale */
-    }
+        opacity: 1;
+  }
 }

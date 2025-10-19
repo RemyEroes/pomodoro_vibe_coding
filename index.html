@@ -1,46 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="favicon_io/favicon.ico" type="image/x-icon">
+
     <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon_io/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon_io/android-chrome-512x512.png">
 
     <title>P🍅M🍅D🍅R🍅</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div class="pomodoro-container">
-        <h1>
-            <span>P</span>
-            <img src="/tomatoes-title/tomato-1.png" alt="Tomato 1">
-            <span>M</span>
-            <img src="/tomatoes-title/tomato-2.png" alt="Tomato 2">
-            <span>D</span>
-            <img src="/tomatoes-title/tomato-3.png" alt="Tomato 3">
-            <span>R</span>
-            <img src="/tomatoes-title/tomato-4.png" alt="Tomato 4">
-        </h1>
-        <input type="text" class="timer-display" id="timer-input" value="25:00" maxlength="5">
-        <div class="controls">
-            <button id="start">Start</button>
-            <button id="pause">Pause</button>
-            <button id="reset">Reset</button>
-        </div>
+    <div class="background">
+        <img src="/assets/texture.webp" alt="Background texture">
     </div>
-    <div class="tasks-container">
-        <div class="task-input-container">
-            <h3>Tasks:</h3>
-            <button id="add-task">ADD</button>
+    <h1>
+        <span>P</span>
+        <img src="/tomatoes-title/tomato-1.png" alt="Tomato 1">
+        <span>M</span>
+        <img src="/tomatoes-title/tomato-2.png" alt="Tomato 2">
+        <span>D</span>
+        <img src="/tomatoes-title/tomato-3.png" alt="Tomato 3">
+        <span>R</span>
+        <img src="/tomatoes-title/tomato-4.png" alt="Tomato 4">
+    </h1>
+    <div class="main">
+        <div class="pomodoro-container">
+            <input type="text" class="timer-display" id="timer-input" value="25:00" maxlength="5">
+            <div class="controls">
+                <button id="start">Start</button>
+                <button id="pause">Pause</button>
+                <button id="reset">Reset</button>
+            </div>
         </div>
-        <ul id="tasks-list"></ul>
+        <div class="tasks-container">
+            <div class="task-input-container">
+                <h3>Tasks:</h3>
+                <button id="add-task">ADD</button>
+            </div>
+            <ul id="tasks-list"></ul>
+        </div>
     </div>
     <div class="completed-tasks-container">
         <h3>Completed Tasks</h3>
         <ul id="completed-tasks-list"></ul>
     </div>
+
     <script src="script.js"></script>
 </body>
+
 </html>
