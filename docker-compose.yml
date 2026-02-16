@@ -1,0 +1,7 @@
+services:
+  pomodoro:
+    build: .
+    container_name: pomodoro
+    restart: always
+    ports:
+      - "${APP_PORT}:80"
