@@ -19,6 +19,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "."
           target: "/var/www/REMY_EROES/pomodoro"
+          rm: true
+          exclude: |
+            .git
+            .github
+            .vscode
+            .env
+
 
       - name: Executing remote ssh commands
         uses: appleboy/ssh-action@v0.1.10
