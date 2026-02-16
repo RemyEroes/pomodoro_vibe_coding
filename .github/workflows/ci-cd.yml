@@ -19,7 +19,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "."
           target: "/var/www/REMY_EROES/pomodoro"
-          rm: true
+          rm: false
           exclude: |
             .git
             .github
